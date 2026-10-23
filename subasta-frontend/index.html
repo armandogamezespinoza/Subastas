@@ -1,142 +1,23 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-MX">
+
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f0f2f5" />
-  <meta name="description" content="Plataforma de registro y revisión para Subasta." />
-  <title>Subasta — Registro y revisión</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: { extend: { colors: { volt: '#CCFF00', ink: '#121316', platinum: '#F0F2F5' },
-        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] } } }
-    };
-  </script>
+  <title>SUBASTA — Alta de Usuarios </title>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
 </head>
-<body class="min-h-screen bg-platinum text-ink antialiased">
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#" aria-label="Subasta inicio">
-        <span class="brand-mark"><i data-lucide="gavel"></i></span>
-        <span>subasta<span class="brand-dot">.</span></span>
-      </a>
-      <nav class="topnav" aria-label="Navegación principal">
-        <button class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i> Panel</button>
-        <button class="nav-link" data-view="onboarding"><i data-lucide="user-round-plus"></i> Registro</button>
-        <button class="nav-link" data-view="review"><i data-lucide="clipboard-check"></i> Solicitudes</button>
-      </nav>
-      <div class="topbar-right">
-        <span class="status-dot"></span><span class="online-label">Sistema operativo</span>
-        <button class="avatar" id="openAuth" aria-label="Abrir acceso">A</button>
-      </div>
-    </header>
 
-    <main>
-      <section class="hero-grid">
-        <div class="hero-copy">
-          <div class="eyebrow"><span class="eyebrow-line"></span> PLATAFORMA DE SUBASTAS</div>
-          <h1>Las buenas<br>oportunidades<br>empiezan <span class="highlight">aquí.</span></h1>
-          <p class="hero-description">Un espacio confiable para compradores y vendedores. Regístrate, comparte tus documentos y da seguimiento a cada paso, sin perder el ritmo.</p>
-          <div class="hero-actions">
-            <button class="btn btn-lime" data-view="onboarding">Crear una cuenta <i data-lucide="arrow-up-right"></i></button>
-            <button class="btn btn-ghost" data-view="review">Ver solicitudes <i data-lucide="arrow-right"></i></button>
-          </div>
-          <div class="trust-row"><span class="trust-avatars"><b>✓</b><b>✓</b><b>✓</b></span><span>Registro seguro <strong>·</strong> Revisión transparente</span></div>
-        </div>
-        <div class="hero-visual">
-          <div class="visual-topline"><span>ACTIVIDAD DE LA PLATAFORMA</span><span class="live-pill"><span></span> EN VIVO</span></div>
-          <div class="metric-card">
-            <div class="metric-heading"><span>Solicitudes recibidas</span><i data-lucide="arrow-up-right"></i></div>
-            <div class="metric-value" id="heroTotal">—</div>
-            <div class="metric-foot"><span class="metric-chip"><i data-lucide="trending-up"></i> Registro activo</span><span>en total</span></div>
-            <div class="bar-chart" aria-label="Gráfico ilustrativo de actividad">
-              <span style="height:24%"></span><span style="height:37%"></span><span style="height:30%"></span><span style="height:48%"></span><span style="height:41%"></span><span style="height:63%"></span><span style="height:52%"></span><span style="height:74%"></span><span style="height:66%"></span><span style="height:89%"></span><span style="height:78%"></span><span style="height:100%"></span>
-            </div>
-          </div>
-          <div class="mini-panels">
-            <div class="mini-panel"><div class="mini-icon lime"><i data-lucide="users"></i></div><div><span>Compradores</span><strong id="heroBuyers">—</strong></div><span class="mini-arrow">↗</span></div>
-            <div class="mini-panel"><div class="mini-icon gray"><i data-lucide="store"></i></div><div><span>Vendedores</span><strong id="heroSellers">—</strong></div><span class="mini-arrow">↗</span></div>
-          </div>
-          <div class="visual-caption"><span class="caption-dot"></span> Todo tu proceso, en un solo lugar</div>
-        </div>
-      </section>
-
-      <section id="overviewView" class="view-section">
-        <div class="section-heading"><div><div class="eyebrow dark">VISTA GENERAL</div><h2>Todo bajo control<span class="lime-period">.</span></h2></div><span class="updated-label"><i data-lucide="refresh-cw"></i> Datos del sistema</span></div>
-        <div id="kpiCards" class="kpi-grid"></div>
-        <div class="dashboard-grid">
-          <article class="surface-card progress-card">
-            <div class="card-title-row"><div><span class="subheading">ESTADO DE SOLICITUDES</span><h3>Avance de revisión</h3></div><span class="round-icon"><i data-lucide="chart-no-axes-combined"></i></span></div>
-            <div id="statusProgress" class="progress-list"></div>
-          </article>
-          <article class="surface-card quick-card">
-            <span class="subheading">SIGUIENTE PASO</span><h3>¿Qué quieres hacer?</h3>
-            <button class="quick-action" data-view="onboarding"><span class="quick-action-icon"><i data-lucide="user-plus"></i></span><span><strong>Registrar perfil</strong><small>Comienza como comprador o vendedor</small></span><i data-lucide="arrow-up-right"></i></button>
-            <button class="quick-action" data-view="review"><span class="quick-action-icon"><i data-lucide="file-check-2"></i></span><span><strong>Revisar solicitudes</strong><small>Consulta estados y documentación</small></span><i data-lucide="arrow-up-right"></i></button>
-          </article>
-        </div>
-      </section>
-
-      <section id="onboardingView" class="view-section hidden">
-        <div class="section-heading"><div><div class="eyebrow dark">ALTA DE USUARIO</div><h2>Comienza con buen pie<span class="lime-period">.</span></h2><p class="section-description">Elige el perfil que mejor se adapta a ti. Puedes completar tus datos y adjuntar documentos en un solo flujo.</p></div></div>
-        <div class="onboarding-layout">
-          <div class="surface-card form-card">
-            <div class="role-switch"><button class="role-option active" data-role="COMPRADOR"><i data-lucide="shopping-bag"></i><span><strong>Comprador</strong><small>Busco oportunidades</small></span><span class="role-check"><i data-lucide="check"></i></span></button><button class="role-option" data-role="VENDEDOR"><i data-lucide="store"></i><span><strong>Vendedor</strong><small>Quiero ofertar</small></span><span class="role-check"><i data-lucide="check"></i></span></button></div>
-            <form id="onboardingForm" class="form-grid">
-              <div class="form-section-title"><span>01</span><div><strong>Información de contacto</strong><small>Usaremos estos datos para comunicarnos contigo.</small></div></div>
-              <label class="field"><span>Correo electrónico *</span><input type="email" name="email" required placeholder="tu@correo.com"></label>
-              <label class="field"><span>Teléfono *</span><input name="telefono" required inputmode="tel" placeholder="10 dígitos"></label>
-              <label class="field full"><span>Tipo de persona *</span><select name="tipoPersona" id="tipoPersona"><option value="FISICA">Persona física</option><option value="MORAL">Persona moral</option></select></label>
-              <div id="personFields" class="field-grid full">
-                <label class="field"><span>Nombre(s) *</span><input name="nombres" required placeholder="Nombre(s)"></label>
-                <label class="field"><span>Apellido paterno *</span><input name="apellidoPaterno" required placeholder="Apellido paterno"></label>
-                <label class="field"><span>Apellido materno</span><input name="apellidoMaterno" placeholder="Apellido materno"></label>
-                <label class="field" data-physical><span>Fecha de nacimiento</span><input type="date" name="fechaNacimiento"></label>
-                <label class="field" data-physical><span>CURP</span><input name="curp" placeholder="18 caracteres"></label>
-                <label class="field"><span>RFC</span><input name="rfc" placeholder="RFC"></label>
-                <label class="field" data-legal><span>Razón social</span><input name="razonSocial" placeholder="Nombre de la empresa"></label>
-                <label class="field" data-legal><span>Fecha de constitución</span><input type="date" name="fechaConstitucion"></label>
-              </div>
-              <div class="form-section-title"><span>02</span><div><strong>Domicilio</strong><small>Información para verificar tu perfil.</small></div></div>
-              <label class="field full"><span>Calle y número</span><input name="calle" placeholder="Calle, número exterior e interior"></label>
-              <label class="field"><span>Código postal</span><input name="codigoPostal" inputmode="numeric" placeholder="00000"></label>
-              <label class="field"><span>Colonia</span><input name="colonia" placeholder="Colonia"></label>
-              <label class="field"><span>Ciudad</span><input name="ciudad" placeholder="Ciudad"></label>
-              <label class="field"><span>Estado</span><input name="estado" placeholder="Estado"></label>
-              <div class="form-section-title"><span>03</span><div><strong>Documentación</strong><small>PDF, JPG o PNG. Adjunta lo disponible para tu perfil.</small></div></div>
-              <div id="documentFields" class="document-grid"></div>
-              <label class="field full"><span>Crear contraseña *</span><input type="password" name="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label>
-              <div class="form-submit full"><p><i data-lucide="shield-check"></i> Tus datos se envían de forma segura al sistema.</p><button class="btn btn-lime" type="submit">Enviar solicitud <i data-lucide="arrow-right"></i></button></div>
-            </form>
-          </div>
-          <aside class="onboarding-aside"><div class="aside-dark"><span class="aside-symbol"><i data-lucide="shield-check"></i></span><span class="subheading">UN PROCESO CLARO</span><h3>De registro a revisión, sin complicaciones.</h3><p>Completa la información solicitada y el equipo de revisión dará seguimiento a tu solicitud.</p><div class="aside-step"><b>1</b><span><strong>Registra tus datos</strong><small>Información básica y contacto.</small></span></div><div class="aside-step"><b>2</b><span><strong>Adjunta documentos</strong><small>Archivos para validar tu identidad.</small></span></div><div class="aside-step"><b>3</b><span><strong>Da seguimiento</strong><small>Consulta el estatus de tu folio.</small></span></div></div></aside>
-        </div>
-      </section>
-
-      <section id="reviewView" class="view-section hidden">
-        <div class="section-heading"><div><div class="eyebrow dark">CENTRO DE CONTROL</div><h2>Solicitudes<span class="lime-period">.</span></h2><p class="section-description">Consulta, filtra y gestiona las solicitudes de compradores y vendedores.</p></div><button class="btn btn-dark" id="refreshRequests"><i data-lucide="refresh-cw"></i> Actualizar</button></div>
-        <div class="surface-card table-card">
-          <div class="table-toolbar"><div class="search-box"><i data-lucide="search"></i><input id="searchRequests" type="search" placeholder="Buscar por nombre, folio o RFC..."></div><div class="filter-group"><select id="typeFilter" aria-label="Filtrar por tipo"><option value="">Todos los perfiles</option><option value="COMPRADOR">Compradores</option><option value="VENDEDOR">Vendedores</option></select><select id="statusFilter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="ENVIADO">Enviado</option><option value="EN_REVISION">En revisión</option><option value="APROBADO">Aprobado</option><option value="RECHAZADO">Rechazado</option></select></div></div>
-          <div id="requestsTable"></div>
-          <div class="table-foot"><span id="requestCount">0 solicitudes</span><span>Los cambios se guardan en el sistema</span></div>
-        </div>
-      </section>
-      <footer class="footer"><span>© <span id="year"></span> Subasta. Hecho para avanzar.</span><span><span class="footer-dot"></span> Plataforma de registro y revisión</span></footer>
-    </main>
-  </div>
-  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
-  <div id="authModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <div class="auth-modal"><button class="modal-close" id="closeAuth" aria-label="Cerrar"><i data-lucide="x"></i></button><div class="modal-brand"><span class="brand-mark"><i data-lucide="gavel"></i></span></div><div class="eyebrow dark">ACCESO SEGURO</div><h2 id="authTitle">Bienvenido de vuelta<span class="lime-period">.</span></h2><p class="section-description">Verifica tu correo con un código de un solo uso.</p>
-      <form id="authForm"><label class="field"><span>Correo electrónico</span><input id="authEmail" type="email" required placeholder="tu@correo.com"></label><div id="otpField" class="field hidden"><span>Código de verificación</span><input id="otpCode" inputmode="numeric" maxlength="6" placeholder="000000"></div><button id="authSubmit" class="btn btn-lime full-button" type="submit">Enviar código <i data-lucide="arrow-right"></i></button></form><p class="auth-note"><i data-lucide="lock-keyhole"></i> Protegido con verificación por correo</p>
-    </div>
-  </div>
-  <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="detail-modal"><button class="modal-close" id="closeDetail" aria-label="Cerrar"><i data-lucide="x"></i></button><div id="detailContent"></div></div></div>
-  <script type="module" src="js/app.js"></script>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
+
 </html>

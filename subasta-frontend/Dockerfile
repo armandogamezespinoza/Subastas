@@ -1,9 +1,13 @@
+# Etapa de compilación
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# Usa Nginx en su versión Alpine (muy ligera) para servir archivos estáticos
+# Etapa de producción con Nginx
 FROM nginx:alpine
-
-# Copia todo el contenido de subasta-frontend dentro del directorio público de Nginx
-COPY . /usr/share/nginx/html
-
-# Expón el puerto 80 del contenedor
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
