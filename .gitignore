@@ -1,2 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment files & local configurations
 .env
-.env
+.env.local
+.env.*.local
+*.env
+
+# Builds & test coverage
+dist/
+target/
+.coverage/
+
+# IDE / Editors
+.idea/
+.vscode/
+*.iml
+
+# AI Agent workspaces (datos locales, no deben ir al repo)
+.gemini/
+.codex/

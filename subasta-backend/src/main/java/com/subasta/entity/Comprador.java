@@ -78,10 +78,14 @@ public class Comprador {
     @Column(nullable = false, length = 100)
     private String estado;
 
+    @Column(length = 20)
+    private String estatus = "ENVIADO";
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
     public Comprador() {}
+
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -154,4 +158,8 @@ public class Comprador {
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public String getEstatus() { return estatus; }
+    public void setEstatus(String estatus) { this.estatus = estatus; }
 }
+

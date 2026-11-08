@@ -25,6 +25,27 @@ public class FileStorageService {
         }
     }
 
+    public Path getUploadPath() {
+        return this.uploadPath;
+    }
+
+    public Path resolveFile(String storedPath) {
+        if (storedPath == null || storedPath.isBlank()) {
+            return null;
+        }
+        try {
+            Path path = Paths.get(storedPath);
+            if (Files.isRegularFile(path)) {
+                return path;
+            }
+            Path inUploadDir = this.uploadPath.resolve(path.getFileName());
+            if (Files.isRegularFile(inUploadDir)) {
+                return inUploadDir;
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     public String saveFile(MultipartFile file, String prefix) {
         if (file == null || file.isEmpty()) {
             return null;

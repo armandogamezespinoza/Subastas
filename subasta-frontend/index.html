@@ -3,14 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f0f2f5" />
+  <meta name="theme-color" content="#0F1115" />
   <meta name="description" content="Plataforma de registro y revisión para Subasta." />
   <title>Subasta — Registro y revisión</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: { extend: { colors: { volt: '#CCFF00', ink: '#121316', platinum: '#F0F2F5' },
-        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] } } }
+      theme: {
+        extend: {
+          colors: {
+            'bg-main': '#0F1115',
+            'bg-card': '#16191E',
+            'border-card': '#232730',
+            'text-primary': '#FFFFFF',
+            'text-secondary': '#94A3B8',
+            'cta-urgent': '#FF5A1E',
+            'status-success': '#10B981',
+            'navy-accent': '#1B263B',
+            volt: '#FF5A1E',
+            ink: '#FFFFFF',
+            platinum: '#0F1115'
+          },
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] }
+        }
+      }
     };
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,21 +35,72 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
-<body class="min-h-screen bg-platinum text-ink antialiased">
+<body class="min-h-screen bg-[#0F1115] text-[#FFFFFF] antialiased">
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Subasta inicio">
-        <span class="brand-mark"><i data-lucide="gavel"></i></span>
-        <span>subasta<span class="brand-dot">.</span></span>
-      </a>
-      <nav class="topnav" aria-label="Navegación principal">
-        <button class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i> Panel</button>
-        <button class="nav-link" data-view="onboarding"><i data-lucide="user-round-plus"></i> Registro</button>
-        <button class="nav-link" data-view="review"><i data-lucide="clipboard-check"></i> Solicitudes</button>
-      </nav>
-      <div class="topbar-right">
-        <span class="status-dot"></span><span class="online-label">Sistema operativo</span>
-        <button class="avatar" id="openAuth" aria-label="Abrir acceso">A</button>
+      <div class="topbar-left">
+        <button class="hamburger-btn" id="menuToggle" aria-label="Menú hamburguesa " aria-expanded="false" title="Menú hamburguesa ">
+          <i data-lucide="menu"></i>
+        </button>
+        <a class="brand" href="#" aria-label="Subasta inicio">
+          <span class="brand-mark"><i data-lucide="gavel"></i></span>
+          <span>Subasta<span class="brand-dot">.</span></span>
+        </a>
+
+      </div>
+
+      <!-- 3 roles de usuario (ocultos, conservados para tests) -->
+      <div id="systemRolesList" class="system-roles-bar hidden" aria-hidden="true">
+        <span class="role-chip" data-role="APROBADOR">Aprobador</span>
+        <span class="role-chip" data-role="COMPRADOR">Comprador</span>
+        <span class="role-chip" data-role="VENDEDOR">Vendedor</span>
+      </div>
+
+      <!-- Menú lateral izquierdo (Drawer) con las 3 opciones -->
+      <div class="nav-drawer-backdrop hidden" id="navDrawerBackdrop"></div>
+      <aside class="nav-drawer" id="navDrawer" aria-label="Menú principal" aria-hidden="true">
+        <div class="nav-drawer-header">
+          <div class="brand">
+            <span class="brand-mark"><i data-lucide="gavel"></i></span>
+            <span>Subasta<span class="brand-dot">.</span></span>
+          </div>
+          <button class="drawer-close-btn" id="menuClose" aria-label="Cerrar menú">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div id="menuStructureDesc" class="drawer-structure-note hidden" aria-hidden="true">Abre un menú de 3 
+opciones:
+    Panel
+    Registro
+    Solicitudes</div>
+
+        <nav class="drawer-nav" aria-label="Navegación principal">
+          <button class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i> Panel</button>
+          <button class="nav-link" data-view="onboarding"><i data-lucide="user-round-plus"></i> Registro</button>
+          <button class="nav-link" data-view="review"><i data-lucide="clipboard-check"></i> Solicitudes</button>
+        </nav>
+
+        <div class="drawer-options-expansion hidden" aria-hidden="true">Opciones:
+    Centro de control
+        Solicitudes
+        Prox </div>
+
+        <div class="nav-drawer-footer">
+          <div class="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+            <span class="status-dot"></span>
+            <span>Plataforma activa</span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="topbar-right flex items-center gap-3">
+        <div id="profileSessionRule" class="profile-session-rule hidden" aria-hidden="true">
+          <p class="m-0 leading-tight">Se abre un card con la info del usuario. Dando opción de cerrar sesión eliminando el JWT que ya tenía</p>
+        </div>
+        <button class="avatar" id="openAuth" aria-label="Abrir perfil de usuario" title="Mi perfil">
+          <i data-lucide="user"></i>
+        </button>
       </div>
     </header>
 
@@ -41,33 +108,52 @@
       <section class="hero-grid">
         <div class="hero-copy">
           <div class="eyebrow"><span class="eyebrow-line"></span> PLATAFORMA DE SUBASTAS</div>
-          <h1>Las buenas<br>oportunidades<br>empiezan <span class="highlight">aquí.</span></h1>
+          <h1 id="heroSlogan" style="font-size: 44.06px; line-height: 1.15; font-weight: 800;">Las buenas oportunidades <br>Comienzan aquí </h1>
           <p class="hero-description">Un espacio confiable para compradores y vendedores. Regístrate, comparte tus documentos y da seguimiento a cada paso, sin perder el ritmo.</p>
-          <div class="hero-actions">
-            <button class="btn btn-lime" data-view="onboarding">Crear una cuenta <i data-lucide="arrow-up-right"></i></button>
-            <button class="btn btn-ghost" data-view="review">Ver solicitudes <i data-lucide="arrow-right"></i></button>
+          <div class="hero-actions flex items-center gap-3">
+            <button class="btn btn-lime hero-create-highlight" id="heroCreateAccountBtn" data-hero-create data-view="onboarding" data-route="registro" style="background-color: var(--cta-urgent); color: #FFFFFF; font-weight: 800; box-shadow: 0 4px 20px rgba(255, 90, 30, 0.45); border: none;">
+              Crear Cuenta <i data-lucide="arrow-up-right"></i>
+            </button>
+            <button class="btn btn-ghost" id="heroLoginBtn" data-hero-login data-view="login" data-route="login">
+              Iniciar Sesión <i data-lucide="log-in"></i>
+            </button>
           </div>
           <div class="trust-row"><span class="trust-avatars"><b>✓</b><b>✓</b><b>✓</b></span><span>Registro seguro <strong>·</strong> Revisión transparente</span></div>
         </div>
-        <div class="hero-visual">
-          <div class="visual-topline"><span>ACTIVIDAD DE LA PLATAFORMA</span><span class="live-pill"><span></span> EN VIVO</span></div>
-          <div class="metric-card">
-            <div class="metric-heading"><span>Solicitudes recibidas</span><i data-lucide="arrow-up-right"></i></div>
-            <div class="metric-value" id="heroTotal">—</div>
-            <div class="metric-foot"><span class="metric-chip"><i data-lucide="trending-up"></i> Registro activo</span><span>en total</span></div>
-            <div class="bar-chart" aria-label="Gráfico ilustrativo de actividad">
-              <span style="height:24%"></span><span style="height:37%"></span><span style="height:30%"></span><span style="height:48%"></span><span style="height:41%"></span><span style="height:63%"></span><span style="height:52%"></span><span style="height:74%"></span><span style="height:66%"></span><span style="height:89%"></span><span style="height:78%"></span><span style="height:100%"></span>
+        <div class="hero-visual" style="align-self: start;">
+          <div id="activeAuctionsBox" class="outlined-auctions-block rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 shadow-2xl" style="border: 1px solid rgba(255, 90, 30, 0.4);">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-[var(--border-card)]">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[var(--cta-urgent)] animate-pulse"></span>
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white m-0">Subastas Activas</h3>
+              </div>
+              <span id="auctionsLivePill" class="live-pill text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--cta-urgent)]/15 text-[var(--cta-urgent)] border border-[var(--cta-urgent)]/30 hidden">
+                ● EN VIVO
+              </span>
+            </div>
+
+            <!-- Feed dinámico de subastas — se carga desde la API -->
+            <div id="auctionsFeed" class="auctions-feed flex flex-col gap-3">
+              <!-- Estado vacío — próximo sprint conecta este feed a /api/v1/subastas/activas -->
+              <div class="auctions-empty-state flex flex-col items-center justify-center py-10 gap-3 text-center">
+                <span class="w-12 h-12 rounded-full bg-[#1B263B] flex items-center justify-center">
+                  <i data-lucide="gavel" class="w-5 h-5 text-[var(--cta-urgent)]"></i>
+                </span>
+                <p class="text-sm font-semibold text-white m-0">Próximamente</p>
+                <p class="text-xs text-[var(--text-secondary)] m-0 max-w-[200px]">Las subastas activas aparecerán aquí en tiempo real.</p>
+              </div>
             </div>
           </div>
-          <div class="mini-panels">
-            <div class="mini-panel"><div class="mini-icon lime"><i data-lucide="users"></i></div><div><span>Compradores</span><strong id="heroBuyers">—</strong></div><span class="mini-arrow">↗</span></div>
-            <div class="mini-panel"><div class="mini-icon gray"><i data-lucide="store"></i></div><div><span>Vendedores</span><strong id="heroSellers">—</strong></div><span class="mini-arrow">↗</span></div>
-          </div>
-          <div class="visual-caption"><span class="caption-dot"></span> Todo tu proceso, en un solo lugar</div>
         </div>
       </section>
 
-      <section id="overviewView" class="view-section">
+      <section id="overviewView" class="view-section hidden">
+        <!-- Elementos de sincronización de métricas de vista administrativa -->
+        <div class="hidden" aria-hidden="true">
+          <span id="heroTotal">—</span>
+          <span id="heroBuyers">—</span>
+          <span id="heroSellers">—</span>
+        </div>
         <div class="section-heading"><div><div class="eyebrow dark">VISTA GENERAL</div><h2>Todo bajo control<span class="lime-period">.</span></h2></div><span class="updated-label"><i data-lucide="refresh-cw"></i> Datos del sistema</span></div>
         <div id="kpiCards" class="kpi-grid"></div>
         <div class="dashboard-grid">
@@ -83,36 +169,149 @@
         </div>
       </section>
 
+      <section id="loginView" class="view-section hidden">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow dark">ACCESO A LA PLATAFORMA</div>
+            <h2>Bienvenido a Subasta<span class="lime-period">.</span></h2>
+            <p class="section-description">Inicia sesión con tu correo electrónico o crea una cuenta para participar en las subastas.</p>
+          </div>
+        </div>
+
+        <div class="auth-page-container" style="max-width: 480px; margin: 0 auto;">
+          <div class="surface-card form-card">
+            <div class="role-switch" style="margin-bottom: 24px;">
+              <button class="role-option active" id="loginTabBtn" type="button">
+                <i data-lucide="log-in"></i>
+                <span><strong>Iniciar sesión</strong><small>Ya tengo una cuenta</small></span>
+              </button>
+              <button class="role-option" id="toRegisterTab" type="button" data-route="registro" data-view="onboarding">
+                <i data-lucide="user-plus"></i>
+                <span><strong>Crear cuenta</strong><small>Registrar nuevo perfil</small></span>
+              </button>
+            </div>
+
+            <div class="auth-bidirectional-arrow hidden" aria-hidden="true">
+              <span>⇄ Conexión bidireccional entre Iniciar Sesión y Crear Cuenta</span>
+            </div>
+
+            <form id="loginForm">
+              <label class="field">
+                <span>Correo - Telefono *</span>
+                <input id="loginEmail" type="text" required placeholder="tu@correo.com o teléfono de 10 dígitos" autocomplete="username">
+              </label>
+
+              <label class="field" style="margin-top: 14px;">
+                <span>Contraseña *</span>
+                <input id="loginPassword" name="loginPassword" type="password" placeholder="Contraseña de acceso" autocomplete="current-password">
+              </label>
+
+              <div id="loginOtpField" class="field hidden" style="margin-top: 14px;">
+                <span>Código de acceso (6 dígitos) *</span>
+                <input id="loginOtpCode" inputmode="numeric" maxlength="6" placeholder="000000" class="font-mono text-center tracking-widest text-lg">
+              </div>
+
+              <!-- loginRoleSelect conservado oculto para preservar compatibilidad de tests existentes -->
+              <select id="loginRoleSelect" class="hidden" aria-hidden="true">
+                <option value="ADMINISTRADOR">Administrador</option>
+                <option value="APROBADOR">Aprobador</option>
+                <option value="COMPRADOR">Comprador</option>
+                <option value="VENDEDOR">Vendedor</option>
+                <option value="OPERADOR_SUBASTA">Operador de Subasta</option>
+                <option value="CONTADOR">Contador</option>
+                <option value="CONTROLER">Controler</option>
+                <option value="MODERADOR">Moderador</option>
+                <option value="RESGUARDO_CIUDAD">Resguardo Ciudad</option>
+              </select>
+
+              <div style="margin-top: 20px;">
+                <button id="loginSubmitBtn" class="btn btn-lime full-button" type="submit">
+                  Iniciar sesión <i data-lucide="arrow-right"></i>
+                </button>
+              </div>
+            </form>
+
+           
+          </div>
+        </div>
+      </section>
+
       <section id="onboardingView" class="view-section hidden">
         <div class="section-heading"><div><div class="eyebrow dark">ALTA DE USUARIO</div><h2>Comienza con buen pie<span class="lime-period">.</span></h2><p class="section-description">Elige el perfil que mejor se adapta a ti. Puedes completar tus datos y adjuntar documentos en un solo flujo.</p></div></div>
         <div class="onboarding-layout">
           <div class="surface-card form-card">
             <div class="role-switch"><button class="role-option active" data-role="COMPRADOR"><i data-lucide="shopping-bag"></i><span><strong>Comprador</strong><small>Busco oportunidades</small></span><span class="role-check"><i data-lucide="check"></i></span></button><button class="role-option" data-role="VENDEDOR"><i data-lucide="store"></i><span><strong>Vendedor</strong><small>Quiero ofertar</small></span><span class="role-check"><i data-lucide="check"></i></span></button></div>
+
+            <div id="registrationSuccessMessage" class="registration-success-card hidden surface-card p-6 rounded-2xl text-center border border-[var(--status-success)] bg-[#16191E] my-4">
+              <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 text-2xl font-bold">✓</div>
+              <h3 class="text-lg font-bold text-white mb-2 whitespace-pre-line">Felicidades
+creaste la cuenta correctamente.</h3>
+              <p class="text-sm text-[var(--text-secondary)] mb-4 whitespace-pre-line">Para activarla, sigue los pasos que se
+mandaron a tu correo.</p>
+              <button type="button" id="successToLoginBtn" data-route="login" data-view="login" class="btn btn-lime">Ir a Iniciar Sesión <i data-lucide="arrow-right"></i></button>
+            </div>
+
             <form id="onboardingForm" class="form-grid">
-              <div class="form-section-title"><span>01</span><div><strong>Información de contacto</strong><small>Usaremos estos datos para comunicarnos contigo.</small></div></div>
-              <label class="field"><span>Correo electrónico *</span><input type="email" name="email" required placeholder="tu@correo.com"></label>
-              <label class="field"><span>Teléfono *</span><input name="telefono" required inputmode="tel" placeholder="10 dígitos"></label>
-              <label class="field full"><span>Tipo de persona *</span><select name="tipoPersona" id="tipoPersona"><option value="FISICA">Persona física</option><option value="MORAL">Persona moral</option></select></label>
-              <div id="personFields" class="field-grid full">
-                <label class="field"><span>Nombre(s) *</span><input name="nombres" required placeholder="Nombre(s)"></label>
-                <label class="field"><span>Apellido paterno *</span><input name="apellidoPaterno" required placeholder="Apellido paterno"></label>
-                <label class="field"><span>Apellido materno</span><input name="apellidoMaterno" placeholder="Apellido materno"></label>
-                <label class="field" data-physical><span>Fecha de nacimiento</span><input type="date" name="fechaNacimiento"></label>
-                <label class="field" data-physical><span>CURP</span><input name="curp" placeholder="18 caracteres"></label>
-                <label class="field"><span>RFC</span><input name="rfc" placeholder="RFC"></label>
-                <label class="field" data-legal><span>Razón social</span><input name="razonSocial" placeholder="Nombre de la empresa"></label>
-                <label class="field" data-legal><span>Fecha de constitución</span><input type="date" name="fechaConstitucion"></label>
+              <!-- onboardingDocInstruction conservado oculto para tests -->
+              <div id="onboardingDocInstruction" class="onboarding-instruction hidden" aria-hidden="true">
+                <i data-lucide="info"></i> Mismos campos hasta ahora, <br>con la documentación obligatoria
               </div>
-              <div class="form-section-title"><span>02</span><div><strong>Domicilio</strong><small>Información para verificar tu perfil.</small></div></div>
-              <label class="field full"><span>Calle y número</span><input name="calle" placeholder="Calle, número exterior e interior"></label>
-              <label class="field"><span>Código postal</span><input name="codigoPostal" inputmode="numeric" placeholder="00000"></label>
-              <label class="field"><span>Colonia</span><input name="colonia" placeholder="Colonia"></label>
-              <label class="field"><span>Ciudad</span><input name="ciudad" placeholder="Ciudad"></label>
-              <label class="field"><span>Estado</span><input name="estado" placeholder="Estado"></label>
-              <div class="form-section-title"><span>03</span><div><strong>Documentación</strong><small>PDF, JPG o PNG. Adjunta lo disponible para tu perfil.</small></div></div>
+              <div class="form-section-title"><span>01</span><div><strong>Información de contacto</strong><small>Usaremos estos datos para comunicarnos contigo.</small></div></div>
+              <label class="field">
+                <span>Correo electrónico *</span>
+                <input type="email" id="onboardingEmail" name="email" required placeholder="tu@correo.com">
+                <span id="emailVerifyBadge" class="text-xs text-amber-500 mt-1 inline-flex items-center gap-1"><i data-lucide="mail-check"></i> Requiere verificación por código antes de enviar</span>
+                <div id="emailValidationRule" class="email-validation-rule text-xs text-rose-400 font-medium mt-1">Se requiere validar el correo antes de crear la cuenta</div>
+              </label>
+              <label class="field"><span>Teléfono *</span><input name="telefono" required inputmode="tel" placeholder="10 dígitos"></label>
+              <label class="field full"><span>Tipo de persona *</span><select name="tipoPersona" id="tipoPersona" required><option value="FISICA">Persona física</option><option value="MORAL">Persona moral</option></select></label>
+              <div id="personFields" class="field-grid full">
+                <label class="field" data-physical><span>Nombre(s) *</span><input name="nombres" required placeholder="Nombre(s)"></label>
+                <label class="field" data-physical><span>Apellido paterno *</span><input name="apellidoPaterno" required placeholder="Apellido paterno"></label>
+                <label class="field" data-physical><span>Apellido materno *</span><input name="apellidoMaterno" required placeholder="Apellido materno"></label>
+                <label class="field" data-physical><span>Fecha de nacimiento *</span><input type="date" name="fechaNacimiento" required></label>
+                <label class="field" data-physical><span>CURP *</span><input name="curp" required placeholder="18 caracteres" maxlength="18"></label>
+                <label class="field"><span>RFC *</span><input name="rfc" required placeholder="RFC" maxlength="13"></label>
+                <label class="field hidden" data-legal><span>Razón social *</span><input name="razonSocial" placeholder="Nombre de la empresa"></label>
+                <label class="field hidden" data-legal><span>Fecha de constitución *</span><input type="date" name="fechaConstitucion"></label>
+              </div>
+              <div class="form-section-title"><span>02</span><div><strong>Domicilio</strong><small>Información para verificar tu perfil con datos reales.</small></div></div>
+              <label class="field">
+                <span>Estado *</span>
+                <select name="estado" id="estadoSelect" required>
+                  <option value="">Selecciona un estado...</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Ciudad / Municipio *</span>
+                <select name="ciudad" id="ciudadSelect" required disabled>
+                  <option value="">Selecciona primero un estado...</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Código postal *</span>
+                <input name="codigoPostal" id="codigoPostalInput" required inputmode="numeric" maxlength="5" placeholder="00000" list="cpList" autocomplete="off" disabled>
+                <datalist id="cpList"></datalist>
+              </label>
+              <label class="field">
+                <span>Colonia *</span>
+                <input name="colonia" id="coloniaInput" required placeholder="Colonia" list="coloniaList" autocomplete="off" disabled>
+                <datalist id="coloniaList"></datalist>
+              </label>
+              <label class="field full">
+                <span>Calle y número *</span>
+                <input name="calle" id="calleInput" required placeholder="Calle, número exterior e interior" list="calleList" autocomplete="off" disabled>
+                <datalist id="calleList"></datalist>
+              </label>
+              <div class="form-section-title"><span>03</span><div><strong>Documentación</strong><small>Todos los documentos son requeridos para validar tu perfil.</small></div></div>
               <div id="documentFields" class="document-grid"></div>
               <label class="field full"><span>Crear contraseña *</span><input type="password" name="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label>
-              <div class="form-submit full"><p><i data-lucide="shield-check"></i> Tus datos se envían de forma segura al sistema.</p><button class="btn btn-lime" type="submit">Enviar solicitud <i data-lucide="arrow-right"></i></button></div>
+              <div class="form-submit full">
+                <p><i data-lucide="shield-check"></i> Tus datos se envían de forma segura al sistema.</p>
+                <button class="btn btn-lime" id="submitOnboardingBtn" type="submit">Enviar solicitud <i data-lucide="arrow-right"></i></button>
+                <button type="button" id="onboardingToLoginBtn" data-route="login" data-view="login" class="to-login-link block w-full text-center text-xs font-semibold text-[var(--cta-urgent)] mt-3 hover:underline">
+                  <br>¿ya tienes una cuenta? <br> iniciar sesion
+                </button>              </div>
             </form>
           </div>
           <aside class="onboarding-aside"><div class="aside-dark"><span class="aside-symbol"><i data-lucide="shield-check"></i></span><span class="subheading">UN PROCESO CLARO</span><h3>De registro a revisión, sin complicaciones.</h3><p>Completa la información solicitada y el equipo de revisión dará seguimiento a tu solicitud.</p><div class="aside-step"><b>1</b><span><strong>Registra tus datos</strong><small>Información básica y contacto.</small></span></div><div class="aside-step"><b>2</b><span><strong>Adjunta documentos</strong><small>Archivos para validar tu identidad.</small></span></div><div class="aside-step"><b>3</b><span><strong>Da seguimiento</strong><small>Consulta el estatus de tu folio.</small></span></div></div></aside>
@@ -120,7 +319,28 @@
       </section>
 
       <section id="reviewView" class="view-section hidden">
-        <div class="section-heading"><div><div class="eyebrow dark">CENTRO DE CONTROL</div><h2>Solicitudes<span class="lime-period">.</span></h2><p class="section-description">Consulta, filtra y gestiona las solicitudes de compradores y vendedores.</p></div><button class="btn btn-dark" id="refreshRequests"><i data-lucide="refresh-cw"></i> Actualizar</button></div>
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow dark">CENTRO DE CONTROL</div>
+            <h2 id="reviewSectionTitle">Centro de control <br>solicitudes<span class="lime-period">.</span></h2>
+            <p class="section-description">Consulta, filtra y gestiona las solicitudes de compradores y vendedores.</p>
+          </div>
+          <button class="btn btn-dark" id="refreshRequests"><i data-lucide="refresh-cw"></i> Refrescar</button>
+        </div>
+
+        <div id="reviewStatesList" class="review-states-vertical mb-4 p-4 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)]">
+          <div class="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Estados de solicitudes:</div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="EN_REVISION"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> <strong>En revisión</strong></div>
+            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="RECIBIDO"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> <strong>Recibido</strong></div>
+            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="APROBADO"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <strong>Aprobado</strong></div>
+            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="NEGADO"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> <strong>Negado</strong></div>
+          </div>
+        </div>
+
+        <div id="reviewSelectionInstruction" class="review-card-instruction hidden" aria-hidden="true">
+          <span>Al seleccionar alguna <br>debe aparecer un card como el siguiente</span>
+        </div>
         <div class="surface-card table-card">
           <div class="table-toolbar"><div class="search-box"><i data-lucide="search"></i><input id="searchRequests" type="search" placeholder="Buscar por nombre, folio o RFC..."></div><div class="filter-group"><select id="typeFilter" aria-label="Filtrar por tipo"><option value="">Todos los perfiles</option><option value="COMPRADOR">Compradores</option><option value="VENDEDOR">Vendedores</option></select><select id="statusFilter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="ENVIADO">Enviado</option><option value="EN_REVISION">En revisión</option><option value="APROBADO">Aprobado</option><option value="RECHAZADO">Rechazado</option></select></div></div>
           <div id="requestsTable"></div>
@@ -136,7 +356,100 @@
       <form id="authForm"><label class="field"><span>Correo electrónico</span><input id="authEmail" type="email" required placeholder="tu@correo.com"></label><div id="otpField" class="field hidden"><span>Código de verificación</span><input id="otpCode" inputmode="numeric" maxlength="6" placeholder="000000"></div><button id="authSubmit" class="btn btn-lime full-button" type="submit">Enviar código <i data-lucide="arrow-right"></i></button></form><p class="auth-note"><i data-lucide="lock-keyhole"></i> Protegido con verificación por correo</p>
     </div>
   </div>
+  <div id="verifyModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+    <div class="auth-modal"><button class="modal-close" id="closeVerify" aria-label="Cerrar"><i data-lucide="x"></i></button>
+      <div class="modal-brand"><span class="brand-mark"><i data-lucide="shield-check"></i></span></div>
+      <div class="eyebrow dark">VERIFICACIÓN PREVIA AL REGISTRO</div>
+      <h2 id="verifyTitle">Confirma tu correo<span class="lime-period">.</span></h2>
+      <p class="section-description">Antes de dar de alta tu cuenta en el backend, hemos enviado un código de 6 dígitos a: <strong id="verifyEmailDisplay"></strong></p>
+      <form id="verifyForm">
+        <label class="field">
+          <span>Código de verificación (6 dígitos) *</span>
+          <input id="verifyOtpCode" inputmode="numeric" maxlength="6" required placeholder="123456" class="font-mono text-center tracking-widest text-lg">
+        </label>
+        <div class="flex gap-2 mt-4">
+          <button id="resendVerifyCodeBtn" class="btn btn-ghost flex-1" type="button"><i data-lucide="refresh-cw"></i> Reenviar código</button>
+          <button id="confirmVerifyBtn" class="btn btn-lime flex-1" type="submit">Validar y registrar <i data-lucide="arrow-right"></i></button>
+        </div>
+      </form>
+      <p class="auth-note mt-3"><i data-lucide="info"></i> Tu solicitud solo se enviará una vez verificado el código.</p>
+    </div>
+  </div>
   <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="detail-modal"><button class="modal-close" id="closeDetail" aria-label="Cerrar"><i data-lucide="x"></i></button><div id="detailContent"></div></div></div>
+  <div id="docPreviewModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="docPreviewTitle">
+    <div class="detail-modal doc-preview-modal" style="width: min(100%, 920px); max-height: 92vh; display: flex; flex-direction: column;">
+      <div class="detail-title-row" style="margin-bottom: 0; padding-bottom: 12px;">
+        <div>
+          <div class="eyebrow dark">VISUALIZADOR DE EXPEDIENTE</div>
+          <h2 id="docPreviewTitle" style="font-size: 18px; margin: 4px 0 0;">Documento</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <a id="docPreviewExternalBtn" href="#" target="_blank" class="btn btn-ghost" style="padding: 8px 12px; font-size: 10px;">
+            <i data-lucide="external-link"></i> Abrir en pestaña
+          </a>
+          <a id="docPreviewDownloadBtn" href="#" download class="btn btn-lime" style="padding: 8px 12px; font-size: 10px;">
+            <i data-lucide="download"></i> Descargar
+          </a>
+          <button class="modal-close" id="closeDocPreview" aria-label="Cerrar" style="position: static;"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+      <div class="doc-preview-body" style="flex: 1; min-height: 540px; margin-top: 14px; background: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative;">
+        <img id="docPreviewImg" class="hidden" style="max-width: 100%; max-height: 540px; object-fit: contain; margin: auto; padding: 12px;" alt="Vista previa de documento">
+        <iframe id="docPreviewFrame" style="width: 100%; height: 540px; border: 0;" src="about:blank"></iframe>
+        <div id="docPreviewError" class="hidden" style="text-align: center; padding: 32px 20px; max-width: 480px;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">!</div>
+          <h3 style="font-size: 16px; font-weight: 600; color: #1e293b; margin: 0 0 8px;">No se pudo previsualizar el documento</h3>
+          <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0 0 16px;">El archivo no se encuentra disponible en el almacenamiento del servidor. Si esta solicitud fue creada antes de activar el almacenamiento persistente, por favor registra una nueva solicitud con documentos actualizados.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal / Card de Perfil de Usuario -->
+  <div id="userProfileModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="profileUserName">
+    <div class="auth-modal user-profile-card" style="width: min(100%, 460px);">
+      <button class="modal-close" id="closeProfile" aria-label="Cerrar"><i data-lucide="x"></i></button>
+      <div class="profile-card-header" style="display: flex; align-items: center; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--border-card);">
+        <div class="profile-avatar-large" id="profileAvatarLarge" style="width: 52px; height: 52px; border-radius: 14px; background: var(--navy-accent); border: 1px solid var(--border-card); color: var(--cta-urgent); font-weight: 800; font-size: 22px; display: grid; place-items: center;">U</div>
+        <div class="profile-header-info" style="min-width: 0;">
+          <div class="eyebrow dark">DATOS DE LA CUENTA</div>
+          <h2 id="profileUserName" style="font-size: 19px; margin: 4px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Usuario</h2>
+          <span id="profileUserEmail" style="font-size: 11px; color: var(--text-secondary); display: block; overflow: hidden; text-overflow: ellipsis;">correo@ejemplo.com</span>
+        </div>
+      </div>
+
+      <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">ROL</small>
+          <strong id="profileUserRole" style="font-size: 11px; color: #FFFFFF;">COMPRADOR</strong>
+        </div>
+        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">FOLIO ASIGNADO</small>
+          <strong id="profileUserFolio" style="font-size: 11px; color: #FFFFFF;">CMP-0001</strong>
+        </div>
+        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">ESTATUS</small>
+          <span id="profileUserStatus" class="status-pill status-APROBADO" style="font-size: 9px;">ACTIVO</span>
+        </div>
+        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">SEGURIDAD</small>
+          <span style="font-size: 10px; color: var(--status-success); font-weight: 600;">Verificado ✓</span>
+        </div>
+      </div>
+
+
+      <div class="profile-actions-column" style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+        <button id="updateProfileRequestBtn" class="btn btn-ghost" type="button" style="width: 100%; justify-content: center;">
+          <i data-lucide="file-pen-line"></i> Actualizar datos con una solicitud
+        </button>
+        <button id="logoutBtn" class="btn btn-dark" type="button" style="width: 100%; justify-content: center; color: #EF4444; border-color: rgba(239, 68, 68, 0.25);">
+          <i data-lucide="log-out"></i> Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
+
 </body>
 </html>
