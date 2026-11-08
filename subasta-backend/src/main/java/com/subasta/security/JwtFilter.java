@@ -29,9 +29,15 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        String token = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            token = authHeader.substring(7);
+        } else if (request.getParameter("token") != null && !request.getParameter("token").isBlank()) {
+            token = request.getParameter("token");
+        }
+
+        if (token != null) {
             try {
                 Claims claims = jwtService.parseToken(token);
                 String email = claims.getSubject();
@@ -39,10 +45,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 if ("ACCESS_TOKEN".equals(type)) {
                     String rol = claims.get("rol", String.class);
+                    if (rol != null && ("ADMIN".equalsIgnoreCase(rol) || "ADMINISTRATOR".equalsIgnoreCase(rol))) {
+                        rol = "ADMINISTRADOR";
+                    }
+                    var authorities = new java.util.ArrayList<SimpleGrantedAuthority>();
+                    if (rol != null) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase()));
+                        if ("ADMINISTRADOR".equalsIgnoreCase(rol)) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                        }
+                    }
                     var auth = new UsernamePasswordAuthenticationToken(
                             email,
                             null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + rol))
+                            authorities
                     );
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } else if ("EMAIL_VERIFIED".equals(type)) {

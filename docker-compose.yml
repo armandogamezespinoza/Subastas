@@ -25,6 +25,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - backend_uploads:/app/uploads
     depends_on:
       - postgres
     networks:
@@ -43,6 +45,7 @@ services:
 
 volumes:
   pgdata:
+  backend_uploads:
 
 networks:
   app-network:

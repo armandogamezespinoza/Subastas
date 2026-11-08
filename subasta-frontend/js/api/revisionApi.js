@@ -18,5 +18,14 @@ export const revisionApi = {
     return request(`/revision/solicitudes/${encodeURIComponent(tipo)}/${encodeURIComponent(id)}/estatus`, {
       method: 'PUT', body: JSON.stringify({ estatus, motivo })
     });
+  },
+  /**
+   * Cambia el rol de un usuario entre COMPRADOR y VENDEDOR.
+   * Solo permitido para APROBADOR y ADMINISTRADOR.
+   */
+  cambiarRolUsuario(usuarioId, rol) {
+    return request(`/revision/usuarios/${encodeURIComponent(usuarioId)}/rol`, {
+      method: 'PUT', body: JSON.stringify({ rol })
+    });
   }
 };

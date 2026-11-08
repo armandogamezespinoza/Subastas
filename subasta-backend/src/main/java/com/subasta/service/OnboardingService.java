@@ -54,6 +54,7 @@ public class OnboardingService {
                     Usuario nuevo = new Usuario();
                     nuevo.setEmail(dto.getEmail());
                     nuevo.setPassword(passwordEncoder.encode(rawPassword));
+                    nuevo.setTelefono(dto.getTelefono());
                     nuevo.setRol("COMPRADOR");
                     nuevo.setActivo(true);
                     nuevo.setFechaCreacion(LocalDateTime.now());
@@ -86,7 +87,9 @@ public class OnboardingService {
         comprador.setColonia(dto.getColonia());
         comprador.setCiudad(dto.getCiudad());
         comprador.setEstado(dto.getEstado());
+        comprador.setEstatus("ENVIADO");
         comprador.setFechaCreacion(LocalDateTime.now());
+
 
         Comprador guardado = compradorRepository.save(comprador);
 
@@ -120,6 +123,7 @@ public class OnboardingService {
                     Usuario nuevo = new Usuario();
                     nuevo.setEmail(dto.getEmail());
                     nuevo.setPassword(passwordEncoder.encode(rawPassword));
+                    nuevo.setTelefono(dto.getTelefono());
                     nuevo.setRol("VENDEDOR");
                     nuevo.setActivo(true);
                     nuevo.setFechaCreacion(LocalDateTime.now());
