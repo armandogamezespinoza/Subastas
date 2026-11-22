@@ -17,9 +17,7 @@ public class EmailService {
     }
 
     public void sendVerificationCode(String toEmail, String code) {
-        log.info("==================================================");
-        log.info(">>> [EMAIL DISPATCH] Verification code for {}: {}", toEmail, code);
-        log.info("==================================================");
+        log.info(">>> [EMAIL DISPATCH] Dispatching verification code to {}", toEmail);
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -28,8 +26,7 @@ public class EmailService {
             message.setText("Tu código de verificación es: " + code + "\n\nEste código expira en 10 minutos.");
             mailSender.send(message);
         } catch (Exception e) {
-            log.warn("Could not dispatch email via SMTP (make sure SMTP credentials are set in application.yml): {}", e.getMessage());
-            log.info("You can use the logged code above for testing in your browser!");
+            log.warn("Could not dispatch email via SMTP: {}", e.getMessage());
         }
     }
 }

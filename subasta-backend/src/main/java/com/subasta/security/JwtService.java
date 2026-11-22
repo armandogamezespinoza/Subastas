@@ -16,11 +16,18 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    @Value("${app.jwt.secret}")
     private String secret;
 
     @Value("${app.jwt.expiration-ms:1800000}")
     private long expirationMs;
+
+    @jakarta.annotation.PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.isBlank() || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET no esta configurado o es inseguro (minimo 256 bits). Configure la variable de entorno JWT_SECRET.");
+        }
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -37,12 +44,13 @@ public class JwtService {
     }
 
     // 1. Challenge token generated when the 6-digit code is dispatched (valid for 10 minutes)
-    public String createChallengeToken(String email, String code) {
+    // REMEDIATION VULN-02: Se elimina codeHash del JWT para evitar ataques de fuerza bruta offline
+    public String createChallengeToken(String email, String challengeId) {
         return Jwts.builder()
                 .subject(email)
                 .claims(Map.of(
                         "type", "CHALLENGE_CODE",
-                        "codeHash", hashCode(code)
+                        "challengeId", challengeId
                 ))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 10 * 60 * 1000))

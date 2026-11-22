@@ -730,6 +730,11 @@ export function openUserProfile(doc = document) {
     }
   }
 
+  const principleEl = $('#profileDesignPrinciple', doc);
+  if (principleEl) {
+    principleEl.textContent = 'La plataforma nunca actúa a nombre de un tercero con datos sin verificar';
+  }
+
   showModal('userProfileModal', doc);
 }
 

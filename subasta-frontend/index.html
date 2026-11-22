@@ -122,14 +122,12 @@ opciones:
         </div>
         <div class="hero-visual" style="align-self: start;">
           <div id="activeAuctionsBox" class="outlined-auctions-block rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 shadow-2xl" style="border: 1px solid rgba(255, 90, 30, 0.4);">
-            <div class="flex items-center justify-between pb-3 mb-4 border-b border-[var(--border-card)]">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-[var(--cta-urgent)] animate-pulse"></span>
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white m-0">Subastas Activas</h3>
+            <div class="flex flex-col items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-[var(--cta-urgent)] flex items-center justify-center shadow-md">
+                <i data-lucide="gavel" class="w-6 h-6 text-white"></i>
               </div>
-              <span id="auctionsLivePill" class="live-pill text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--cta-urgent)]/15 text-[var(--cta-urgent)] border border-[var(--cta-urgent)]/30 hidden">
-                ● EN VIVO
-              </span>
+              <h3 class="text-lg font-extrabold text-white">Subastas Activas</h3>
+              <p class="text-sm text-[var(--text-secondary)] text-center max-w-xs">Explora los lotes en tiempo real y participa.</p>
             </div>
 
             <!-- Feed dinámico de subastas — se carga desde la API -->
@@ -228,6 +226,9 @@ opciones:
                 <button id="loginSubmitBtn" class="btn btn-lime full-button" type="submit">
                   Iniciar sesión <i data-lucide="arrow-right"></i>
                 </button>
+                <button type="button" id="loginToRegisterBtn" data-route="registro" data-view="onboarding" class="to-register-link block w-full text-center text-xs font-semibold text-[var(--cta-urgent)] mt-3 hover:underline">
+                  En caso de no tener cuenta, poder ir al menú de crear cuenta
+                </button>
               </div>
             </form>
 
@@ -310,7 +311,7 @@ mandaron a tu correo.</p>
                 <p><i data-lucide="shield-check"></i> Tus datos se envían de forma segura al sistema.</p>
                 <button class="btn btn-lime" id="submitOnboardingBtn" type="submit">Enviar solicitud <i data-lucide="arrow-right"></i></button>
                 <button type="button" id="onboardingToLoginBtn" data-route="login" data-view="login" class="to-login-link block w-full text-center text-xs font-semibold text-[var(--cta-urgent)] mt-3 hover:underline">
-                  <br>¿ya tienes una cuenta? <br> iniciar sesion
+                  Opcion para ir a iniciar sesión si ya se tiene cuenta
                 </button>              </div>
             </form>
           </div>
@@ -434,6 +435,14 @@ mandaron a tu correo.</p>
         <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
           <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">SEGURIDAD</small>
           <span style="font-size: 10px; color: var(--status-success); font-weight: 600;">Verificado ✓</span>
+        </div>
+        <div class="profile-detail-item" style="grid-column: span 2; background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">CAPACIDADES DEL ROL</small>
+          <div id="profileRoleCapabilities" style="font-size: 11px; color: #FFFFFF; line-height: 1.4;">Acceso estándar a la plataforma.</div>
+        </div>
+        <div class="profile-detail-item" style="grid-column: span 2; background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">PRINCIPIO DE DISEÑO</small>
+          <div id="profileDesignPrinciple" style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">La plataforma nunca actúa a nombre de un tercero con datos sin verificar</div>
         </div>
       </div>
 

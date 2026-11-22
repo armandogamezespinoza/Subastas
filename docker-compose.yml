@@ -2,44 +2,92 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: subasta_postgres
+    restart: unless-stopped
+    # Principio de minimo privilegio: Solo se entregan variables requeridas por Postgres.
+    # Se omitio env_file para no filtrar secretos de JWT ni SMTP al motor de base de datos.
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER es obligatorio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+      APP_DB_USER: ${APP_DB_USER:-subasta_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?APP_DB_PASSWORD es obligatorio}
+    # SEGURIDAD VULN-04: Sin mapeo de puertos al host. Solo comunicacion interna.
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     networks:
       - app-network
 
   backend:
-    build: ./subasta-backend
+    build:
+      context: ./subasta-backend
+      dockerfile: Dockerfile
     container_name: subasta_backend
-    restart: always
-    ports:
-      - "8080:8080"
+    restart: unless-stopped
+    # Principio de minimo privilegio: Solo recibe las variables que Spring Boot necesita.
+    # No recibe la contrasena de superusuario POSTGRES_PASSWORD.
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+      POSTGRES_USER: ${APP_DB_USER:-subasta_app}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:?APP_DB_PASSWORD es obligatorio}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-1800000}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:?MAIL_USERNAME es obligatorio}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:?MAIL_PASSWORD es obligatorio}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
     volumes:
       - backend_uploads:/app/uploads
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
     networks:
       - app-network
 
   frontend:
-    build: ./subasta-frontend
+    build:
+      context: ./subasta-frontend
+      dockerfile: Dockerfile
     container_name: subasta_frontend
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     networks:
       - app-network
 
