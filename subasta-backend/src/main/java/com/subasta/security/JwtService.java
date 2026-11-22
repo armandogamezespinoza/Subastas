@@ -86,6 +86,20 @@ public class JwtService {
                 .compact();
     }
 
+    // 4. Token emitido tras verificar código OTP para restablecer contraseña (válido 15 minutos)
+    public String createPasswordResetToken(String email) {
+        return Jwts.builder()
+                .subject(email)
+                .claims(Map.of(
+                        "type", "PASSWORD_RESET",
+                        "password_reset", true
+                ))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

@@ -148,7 +148,7 @@ describe('Diagram Requirements Specification (UX/UI & Business Rules)', () => {
       expect(toLogin.textContent.replace(/\s+/g, ' ')).toContain('Opcion para ir a iniciar sesión si ya se tiene cuenta');
     });
 
-    it('should have login fields: Correo - Telefono, Contraseña, and bidirectional links', () => {
+    it('should have login fields: Correo - Telefono, Contraseña, and Recuperar contraseña link', () => {
       const loginView = document.querySelector('#loginView');
       expect(loginView).not.toBeNull();
 
@@ -160,9 +160,9 @@ describe('Diagram Requirements Specification (UX/UI & Business Rules)', () => {
       const passInput = loginView.querySelector('#loginPassword, input[name="loginPassword"]');
       expect(passInput).not.toBeNull();
 
-      const toRegister = loginView.querySelector('#loginToRegisterBtn');
-      expect(toRegister).not.toBeNull();
-      expect(toRegister.textContent.replace(/\s+/g, ' ')).toContain('En caso de no tener cuenta, poder ir al menú de crear cuenta');
+      const forgotBtn = loginView.querySelector('#forgotPasswordBtn');
+      expect(forgotBtn).not.toBeNull();
+      expect(forgotBtn.textContent.replace(/\s+/g, ' ').trim()).toContain('Recuperar contraseña');
     });
 
     it('should have registration success message screen with exact wording', () => {
