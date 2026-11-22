@@ -1,11 +1,5 @@
 export function getApiBaseUrl() {
-  if (typeof window !== 'undefined' && window.location) {
-    // When served via Docker Nginx on port 80 or reverse proxy
-    if (window.location.port === '80' || window.location.port === '' || window.location.pathname.startsWith('/api')) {
-      return '/api/v1';
-    }
-  }
-  return 'http://localhost:8080/api/v1';
+  return '/api/v1';
 }
 
 const API_BASE_URL = getApiBaseUrl();

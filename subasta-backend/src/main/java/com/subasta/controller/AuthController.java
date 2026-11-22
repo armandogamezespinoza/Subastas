@@ -8,23 +8,26 @@ import com.subasta.repository.UsuarioRepository;
 import com.subasta.repository.VendedorRepository;
 import com.subasta.security.JwtService;
 import com.subasta.service.EmailService;
+import com.subasta.service.LoginAttemptService;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final com.subasta.service.VerificationCodeService verificationCodeService;
+    private final LoginAttemptService loginAttemptService;
     private final UsuarioRepository usuarioRepository;
     private final CompradorRepository compradorRepository;
     private final VendedorRepository vendedorRepository;
@@ -32,12 +35,16 @@ public class AuthController {
 
     public AuthController(JwtService jwtService,
                           EmailService emailService,
+                          com.subasta.service.VerificationCodeService verificationCodeService,
+                          LoginAttemptService loginAttemptService,
                           UsuarioRepository usuarioRepository,
                           CompradorRepository compradorRepository,
                           VendedorRepository vendedorRepository,
                           org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.verificationCodeService = verificationCodeService;
+        this.loginAttemptService = loginAttemptService;
         this.usuarioRepository = usuarioRepository;
         this.compradorRepository = compradorRepository;
         this.vendedorRepository = vendedorRepository;
@@ -65,6 +72,19 @@ public class AuthController {
         }
 
         String identifier = rawIdentifier.trim();
+
+        // Verificar bloqueo por fuerza bruta antes de consultar la base de datos.
+        // Se aplica al identificador enviado (no al usuario), para no revelar si la cuenta existe.
+        if (loginAttemptService.isBlocked(identifier)) {
+            long retryAfter = loginAttemptService.getLockoutSecondsRemaining(identifier);
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfter))
+                    .body(Map.of(
+                            "success", false,
+                            "error", "Demasiados intentos fallidos. Intenta de nuevo más tarde."
+                    ));
+        }
+
         Optional<Usuario> usuarioOpt = Optional.empty();
 
         if (identifier.contains("@")) {
@@ -89,9 +109,11 @@ public class AuthController {
         }
 
         if (usuarioOpt.isEmpty()) {
+            // Registrar intento fallido incluso para cuentas inexistentes (anti-enumeración)
+            loginAttemptService.registerFailedAttempt(identifier);
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
-                    "error", "Usuario no encontrado con ese correo o teléfono"
+                    "error", "Credenciales incorrectas"
             ));
         }
 
@@ -101,16 +123,16 @@ public class AuthController {
             passwordMatches = passwordEncoder.matches(password, u.getPassword());
         } catch (Exception ignored) {}
 
-        if (!passwordMatches && password.equals(u.getPassword())) {
-            passwordMatches = true;
-        }
-
         if (!passwordMatches) {
+            loginAttemptService.registerFailedAttempt(identifier);
             return ResponseEntity.status(401).body(Map.of(
                     "success", false,
-                    "error", "Contraseña incorrecta"
+                    "error", "Credenciales incorrectas"
             ));
         }
+
+        // Login exitoso: limpiar contador de intentos fallidos
+        loginAttemptService.clearAttempts(identifier);
 
         String accessToken = jwtService.createAccessToken(u.getEmail(), u.getRol());
 
@@ -154,8 +176,20 @@ public class AuthController {
     @PostMapping("/send-code")
     public ResponseEntity<?> sendCode(@Valid @RequestBody SendCodeRequest request) {
         String email = request.getEmail().trim().toLowerCase();
-        String code = String.valueOf(100000 + new SecureRandom().nextInt(900000));
-        String challengeToken = jwtService.createChallengeToken(email, code);
+
+        if (verificationCodeService.isCooldownActive(email)) {
+            long remaining = verificationCodeService.getCooldownSecondsRemaining(email);
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(remaining))
+                    .body(Map.of(
+                            "success", false,
+                            "error", "Por favor espera " + remaining + " segundos antes de solicitar un nuevo código."
+                    ));
+        }
+
+        String challengeId = verificationCodeService.generateAndStoreCode(email);
+        String code = verificationCodeService.getCodeForChallenge(challengeId);
+        String challengeToken = jwtService.createChallengeToken(email, challengeId);
 
         emailService.sendVerificationCode(email, code);
 
@@ -171,12 +205,26 @@ public class AuthController {
         try {
             Claims claims = jwtService.parseToken(request.getChallengeToken());
             String email = claims.getSubject();
-            String expectedHash = claims.get("codeHash", String.class);
+            String challengeId = claims.get("challengeId", String.class);
 
-            if (!jwtService.hashCode(request.getCode().trim()).equals(expectedHash)) {
+            com.subasta.service.VerificationCodeService.VerificationResult result =
+                    verificationCodeService.verifyCode(challengeId, request.getCode(), email);
+
+            if (result == com.subasta.service.VerificationCodeService.VerificationResult.INVALID_OR_EXPIRED) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
-                        "error", "Código de verificación incorrecto"
+                        "error", "El código ha expirado o el token es inválido"
+                ));
+            } else if (result == com.subasta.service.VerificationCodeService.VerificationResult.MAX_ATTEMPTS_EXCEEDED) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Has superado el límite de intentos permitidos. Solicita un nuevo código."
+                ));
+            } else if (result == com.subasta.service.VerificationCodeService.VerificationResult.CODE_MISMATCH) {
+                int remaining = verificationCodeService.getRemainingAttempts(challengeId);
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Código de verificación incorrecto. Intentos restantes: " + remaining
                 ));
             }
 

@@ -11,8 +11,11 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -25,7 +28,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/revision")
-@CrossOrigin(origins = "*")
 public class RevisionController {
 
     private final CompradorRepository compradorRepository;
@@ -320,13 +322,64 @@ public class RevisionController {
         return serveDocument(id, true);
     }
 
+    private boolean isAuthorizedToAccessDocument(Documento doc, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return false;
+        }
+
+        // Roles administrativos tienen acceso total a todos los expedientes
+        boolean isStaff = auth.getAuthorities().stream().anyMatch(a -> {
+            String role = a.getAuthority();
+            return "ROLE_ADMINISTRADOR".equals(role) || "ROLE_ADMIN".equals(role)
+                    || "ROLE_APROBADOR".equals(role) || "ROLE_CONTROLER".equals(role);
+        });
+        if (isStaff) {
+            return true;
+        }
+
+        if (doc == null) {
+            return false;
+        }
+
+        String currentUserEmail = auth.getName();
+        if (currentUserEmail == null || currentUserEmail.isBlank()) {
+            return false;
+        }
+
+        // Validación estricta de propiedad de recurso (Anti-IDOR / Anti-BOLA)
+        if ("COMPRADOR".equalsIgnoreCase(doc.getTipoUsuario())) {
+            return compradorRepository.findById(doc.getRegistroId())
+                    .map(c -> currentUserEmail.equalsIgnoreCase(c.getEmail()))
+                    .orElse(false);
+        } else if ("VENDEDOR".equalsIgnoreCase(doc.getTipoUsuario())) {
+            return vendedorRepository.findById(doc.getRegistroId())
+                    .map(v -> currentUserEmail.equalsIgnoreCase(v.getEmail()))
+                    .orElse(false);
+        }
+
+        return false;
+    }
+
     private ResponseEntity<Resource> serveDocument(Long id, boolean asDownload) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         Optional<Documento> docOpt = documentoRepository.findById(id);
-        Documento doc = docOpt.orElse(null);
-        String filename = (doc != null && doc.getNombreArchivo() != null && !doc.getNombreArchivo().isBlank())
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Documento doc = docOpt.get();
+        if (!isAuthorizedToAccessDocument(doc, auth)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        String filename = (doc.getNombreArchivo() != null && !doc.getNombreArchivo().isBlank())
                 ? doc.getNombreArchivo()
                 : "Documento #" + id + ".pdf";
-        Path filePath = (doc != null && doc.getRutaArchivo() != null)
+        Path filePath = (doc.getRutaArchivo() != null)
                 ? fileStorageService.resolveFile(doc.getRutaArchivo())
                 : null;
 
