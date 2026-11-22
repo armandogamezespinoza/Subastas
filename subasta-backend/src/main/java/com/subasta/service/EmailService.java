@@ -32,4 +32,20 @@ public class EmailService {
             log.warn("Could not dispatch email via SMTP to {}: {}", toEmail, e.getMessage());
         }
     }
+
+    @Async
+    public void sendPasswordResetCode(String toEmail, String code) {
+        log.info(">>> [EMAIL DISPATCH] Dispatching password reset code to {}", toEmail);
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("Recuperación de contraseña — SUBASTA");
+            message.setText("Has solicitado recuperar tu contraseña en SUBASTA.\n\nTu código de verificación es: " + code + "\n\nEste código expira en 10 minutos.\n\nSi no realizaste esta solicitud, puedes ignorar este mensaje.");
+            mailSender.send(message);
+            log.info(">>> [EMAIL DISPATCH] Password reset code successfully sent to {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Could not dispatch password reset email via SMTP to {}: {}", toEmail, e.getMessage());
+        }
+    }
 }

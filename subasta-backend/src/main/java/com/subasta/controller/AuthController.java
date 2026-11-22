@@ -1,5 +1,6 @@
 package com.subasta.controller;
 
+import com.subasta.dto.ResetPasswordRequest;
 import com.subasta.dto.SendCodeRequest;
 import com.subasta.dto.VerifyCodeRequest;
 import com.subasta.entity.Usuario;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -276,6 +278,141 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "error", "El código ha expirado o el token es inválido"
+            ));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody SendCodeRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+
+        if (verificationCodeService.isCooldownActive(email)) {
+            long remaining = verificationCodeService.getCooldownSecondsRemaining(email);
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(remaining))
+                    .body(Map.of(
+                            "success", false,
+                            "error", "Por favor espera " + remaining + " segundos antes de solicitar un nuevo código."
+                    ));
+        }
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        String challengeToken;
+        if (usuarioOpt.isPresent() && Boolean.TRUE.equals(usuarioOpt.get().getActivo())) {
+            String challengeId = verificationCodeService.generateAndStoreCode(email);
+            String code = verificationCodeService.getCodeForChallenge(challengeId);
+            challengeToken = jwtService.createChallengeToken(email, challengeId);
+            emailService.sendPasswordResetCode(email, code);
+        } else {
+            // Anti-enumeración de usuarios (OWASP): misma respuesta y token sintético para no revelar existencia
+            challengeToken = jwtService.createChallengeToken(email, UUID.randomUUID().toString());
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Si tu correo se encuentra registrado, recibirás un código de verificación en breve.",
+                "challengeToken", challengeToken
+        ));
+    }
+
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<?> verifyResetCode(@Valid @RequestBody VerifyCodeRequest request) {
+        try {
+            Claims claims = jwtService.parseToken(request.getChallengeToken());
+            if (!"CHALLENGE_CODE".equals(claims.get("type", String.class))) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Tipo de token inválido para verificación de código"
+                ));
+            }
+
+            String email = claims.getSubject();
+            String challengeId = claims.get("challengeId", String.class);
+
+            com.subasta.service.VerificationCodeService.VerificationResult result =
+                    verificationCodeService.verifyCode(challengeId, request.getCode(), email);
+
+            if (result == com.subasta.service.VerificationCodeService.VerificationResult.INVALID_OR_EXPIRED) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "El código ha expirado o el token es inválido"
+                ));
+            } else if (result == com.subasta.service.VerificationCodeService.VerificationResult.MAX_ATTEMPTS_EXCEEDED) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Has superado el límite de intentos permitidos. Solicita un nuevo código."
+                ));
+            } else if (result == com.subasta.service.VerificationCodeService.VerificationResult.CODE_MISMATCH) {
+                int remaining = verificationCodeService.getRemainingAttempts(challengeId);
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Código de verificación incorrecto. Intentos restantes: " + remaining,
+                        "attemptsRemaining", remaining
+                ));
+            }
+
+            String resetToken = jwtService.createPasswordResetToken(email);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "verified", true,
+                    "resetToken", resetToken,
+                    "message", "Código verificado exitosamente"
+            ));
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "El tiempo para ingresar el código ha expirado. Solicita uno nuevo."
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Token de desafío inválido o alterado"
+            ));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            Claims claims = jwtService.parseToken(request.getResetToken());
+            if (!"PASSWORD_RESET".equals(claims.get("type", String.class))) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Token de recuperación inválido o no autorizado"
+                ));
+            }
+
+            String email = claims.getSubject();
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+            if (usuarioOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "error", "Usuario no encontrado"
+                ));
+            }
+
+            Usuario usuario = usuarioOpt.get();
+            usuario.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            usuarioRepository.save(usuario);
+
+            // Limpiar bloqueos de fuerza bruta
+            loginAttemptService.clearAttempts(email);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña."
+            ));
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "El token de recuperación ha expirado. Solicita un nuevo código."
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Token de recuperación inválido o manipulado"
             ));
         }
     }

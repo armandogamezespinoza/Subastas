@@ -192,7 +192,10 @@ export const state = {
   user: null,
   token: null,
   loginChallengeToken: '',
-  loginEmail: ''
+  loginEmail: '',
+  forgotChallengeToken: '',
+  forgotResetToken: '',
+  forgotEmail: ''
 };
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -894,6 +897,165 @@ export async function submitLogin(event) {
   }
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// Flujo de Recuperación de Contraseña (OTP → Reset)
+// ──────────────────────────────────────────────────────────────────────
+
+function resetForgotModal() {
+  const steps = ['forgotStep1', 'forgotStep2', 'forgotStep3', 'forgotStep4'];
+  steps.forEach((id, i) => {
+    const el = $(`#${id}`);
+    if (el) el.classList.toggle('hidden', i !== 0);
+  });
+  const emailInput = $('#forgotEmail');
+  if (emailInput) emailInput.value = '';
+  const otpInput = $('#forgotOtpCode');
+  if (otpInput) otpInput.value = '';
+  const pw1 = $('#forgotNewPassword');
+  if (pw1) pw1.value = '';
+  const pw2 = $('#forgotConfirmPassword');
+  if (pw2) pw2.value = '';
+  state.forgotChallengeToken = '';
+  state.forgotResetToken = '';
+  state.forgotEmail = '';
+}
+
+export function openForgotPassword() {
+  resetForgotModal();
+  // Pre-fill email from login form if available
+  const loginEmail = $('#loginEmail');
+  const forgotEmail = $('#forgotEmail');
+  if (loginEmail && forgotEmail && loginEmail.value.trim()) {
+    forgotEmail.value = loginEmail.value.trim();
+  }
+  showModal('forgotPasswordModal');
+  initIcons($('#forgotPasswordModal'));
+}
+
+export function closeForgotPassword() {
+  hideModal('forgotPasswordModal');
+  resetForgotModal();
+}
+
+export async function forgotStep1Submit(event) {
+  if (event) event.preventDefault();
+  const emailInput = $('#forgotEmail');
+  const btn = $('#forgotSendCodeBtn');
+  const email = emailInput?.value.trim() || '';
+
+  if (!email) {
+    toast('Ingresa tu correo electrónico.', 'error');
+    return;
+  }
+
+  if (btn) setLoading(btn, true);
+  try {
+    const res = await authApi.forgotPassword(email);
+    state.forgotChallengeToken = res?.challengeToken || '';
+    state.forgotEmail = email;
+    toast(res?.message || 'Si el correo existe, recibirás un código de verificación.');
+    // Show step 2
+    $('#forgotStep1')?.classList.add('hidden');
+    $('#forgotStep2')?.classList.remove('hidden');
+    const otpInput = $('#forgotOtpCode');
+    if (otpInput) otpInput.focus();
+    initIcons($('#forgotPasswordModal'));
+  } catch (error) {
+    toast(error.message || 'Error al enviar el código.', 'error');
+  } finally {
+    if (btn) setLoading(btn, false);
+  }
+}
+
+export async function forgotStep2Submit(event) {
+  if (event) event.preventDefault();
+  const otpInput = $('#forgotOtpCode');
+  const btn = $('#forgotVerifyBtn');
+  const code = otpInput?.value.trim() || '';
+
+  if (!code || code.length < 6) {
+    toast('Ingresa el código de 6 dígitos.', 'error');
+    return;
+  }
+
+  if (btn) setLoading(btn, true);
+  try {
+    const res = await authApi.verifyResetCode(code, state.forgotChallengeToken);
+    if (res?.resetToken) {
+      state.forgotResetToken = res.resetToken;
+      toast('Código verificado correctamente.');
+      // Show step 3 (Nueva contraseña)
+      $('#forgotStep2')?.classList.add('hidden');
+      $('#forgotStep3')?.classList.remove('hidden');
+      const pw = $('#forgotNewPassword');
+      if (pw) pw.focus();
+      initIcons($('#forgotPasswordModal'));
+    } else {
+      toast(res?.error || 'Código incorrecto. Intenta de nuevo.', 'error');
+    }
+  } catch (error) {
+    toast(error.message || 'Error al verificar el código.', 'error');
+  } finally {
+    if (btn) setLoading(btn, false);
+  }
+}
+
+export async function forgotStep3Submit(event) {
+  if (event) event.preventDefault();
+  const pw1 = $('#forgotNewPassword');
+  const pw2 = $('#forgotConfirmPassword');
+  const btn = $('#forgotResetBtn');
+  const password = pw1?.value || '';
+  const confirm = pw2?.value || '';
+
+  if (password.length < 8) {
+    toast('La contraseña debe tener al menos 8 caracteres.', 'error');
+    return;
+  }
+  if (password !== confirm) {
+    toast('Las contraseñas no coinciden.', 'error');
+    return;
+  }
+
+  if (btn) setLoading(btn, true);
+  try {
+    const res = await authApi.resetPassword(state.forgotResetToken, password);
+    if (res?.success) {
+      toast('Contraseña actualizada exitosamente.');
+      // Pre-fill email in login
+      const loginEmail = $('#loginEmail');
+      const loginPassword = $('#loginPassword');
+      if (loginEmail && state.forgotEmail) loginEmail.value = state.forgotEmail;
+      if (loginPassword) loginPassword.value = '';
+
+      // Show step 4
+      $('#forgotStep3')?.classList.add('hidden');
+      $('#forgotStep4')?.classList.remove('hidden');
+      initIcons($('#forgotPasswordModal'));
+    } else {
+      toast(res?.error || 'Error al cambiar la contraseña.', 'error');
+    }
+  } catch (error) {
+    toast(error.message || 'Error al cambiar la contraseña.', 'error');
+  } finally {
+    if (btn) setLoading(btn, false);
+  }
+}
+
+export async function forgotResendCode() {
+  const btn = $('#forgotResendBtn');
+  if (btn) setLoading(btn, true);
+  try {
+    const res = await authApi.forgotPassword(state.forgotEmail);
+    state.forgotChallengeToken = res?.challengeToken || state.forgotChallengeToken;
+    toast('Código reenviado. Revisa tu correo.');
+  } catch (error) {
+    toast(error.message || 'Error al reenviar el código.', 'error');
+  } finally {
+    if (btn) setLoading(btn, false);
+  }
+}
+
 export function openNavDrawer(doc = document) {
   const drawer = $('#navDrawer', doc);
   const backdrop = $('#navDrawerBackdrop', doc);
@@ -1189,7 +1351,18 @@ export function bindEvents() {
 
   $('#loginForm')?.addEventListener('submit', submitLogin);
   $('#toRegisterTab')?.addEventListener('click', () => navigate('registro'));
-  $('#loginToRegisterBtn')?.addEventListener('click', () => navigate('registro'));
+
+  // ── Forgot Password flow ──
+  $('#forgotPasswordBtn')?.addEventListener('click', openForgotPassword);
+  $('#closeForgotPassword')?.addEventListener('click', closeForgotPassword);
+  $('#forgotStep1Form')?.addEventListener('submit', forgotStep1Submit);
+  $('#forgotStep2Form')?.addEventListener('submit', forgotStep2Submit);
+  $('#forgotStep3Form')?.addEventListener('submit', forgotStep3Submit);
+  $('#forgotResendBtn')?.addEventListener('click', forgotResendCode);
+  $('#forgotToLoginBtn')?.addEventListener('click', () => {
+    closeForgotPassword();
+    navigate('login');
+  });
 
   document.querySelectorAll('[data-route]').forEach(el => el.addEventListener('click', (e) => {
     const route = el.dataset.route;
