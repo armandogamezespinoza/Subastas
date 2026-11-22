@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +17,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Async
     public void sendVerificationCode(String toEmail, String code) {
         log.info(">>> [EMAIL DISPATCH] Dispatching verification code to {}", toEmail);
 
@@ -25,8 +27,9 @@ public class EmailService {
             message.setSubject("Código de verificación — SUBASTA");
             message.setText("Tu código de verificación es: " + code + "\n\nEste código expira en 10 minutos.");
             mailSender.send(message);
+            log.info(">>> [EMAIL DISPATCH] Verification code successfully sent to {}", toEmail);
         } catch (Exception e) {
-            log.warn("Could not dispatch email via SMTP: {}", e.getMessage());
+            log.warn("Could not dispatch email via SMTP to {}: {}", toEmail, e.getMessage());
         }
     }
 }
