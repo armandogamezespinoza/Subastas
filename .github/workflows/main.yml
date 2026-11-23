@@ -1,0 +1,91 @@
+name: CI & Quality Assurance Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. Pruebas automatizadas de Frontend (Vitest + JSDOM)
+  frontend-ci:
+    name: Frontend Tests (Vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./subasta-frontend
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js con caché de dependencias
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'subasta-frontend/package-lock.json'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar las 74 pruebas del Frontend
+        run: npm test
+
+  # 2. Pruebas y compilación de Backend (Java 21 + Spring Boot)
+  backend-ci:
+    name: Backend Tests & Build (Java 21)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./subasta-backend
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21 con caché de Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Dar permisos de ejecución al wrapper de Maven
+        run: chmod +x ./mvnw
+
+      # clean package ejecuta las 33 pruebas Y empaqueta el JAR en un solo comando rápido
+      - name: Ejecutar pruebas y compilar JAR
+        env:
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+          SPRING_DATASOURCE_USERNAME: sa
+          SPRING_DATASOURCE_PASSWORD: ""
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+          JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+        run: ./mvnw clean package -B
+
+      - name: Guardar JAR como artefacto gratuito descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: subasta-backend-jar
+          path: subasta-backend/target/*.jar
+          retention-days: 7
+
+  # 3. Despliegue Continuo en Render (CD)
+  deploy-render:
+    name: Deploy to Render
+    needs: [ frontend-ci, backend-ci ]
+    # Se dispara solo tras push exitoso a main y si el secreto está configurado
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar despliegue en Render
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          else
+            echo "RENDER_DEPLOY_HOOK no está configurado en Secrets. Despliegue omitido."
+          fi
