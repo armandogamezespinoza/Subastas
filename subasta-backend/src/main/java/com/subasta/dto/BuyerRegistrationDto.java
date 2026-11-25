@@ -1,5 +1,6 @@
 package com.subasta.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 
 public class BuyerRegistrationDto {
@@ -10,11 +11,15 @@ public class BuyerRegistrationDto {
     private String nombres;
     private String apellidoPaterno;
     private String apellidoMaterno;
+
+    @JsonFormat(pattern = "[yyyy-MM-dd][dd/MM/yyyy][dd-MM-yyyy]")
     private LocalDate fechaNacimiento;
     private String curp;
     private String contactoEmergencia;
 
     private String razonSocial;
+
+    @JsonFormat(pattern = "[yyyy-MM-dd][dd/MM/yyyy][dd-MM-yyyy]")
     private LocalDate fechaConstitucion;
     private String rfcRepresentante;
     private String correoCorporativo;
@@ -28,6 +33,7 @@ public class BuyerRegistrationDto {
     private String estado;
 
     private String password;
+    private String verifiedEmailToken;
 
     public BuyerRegistrationDto() {}
 
@@ -93,4 +99,7 @@ public class BuyerRegistrationDto {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getVerifiedEmailToken() { return verifiedEmailToken; }
+    public void setVerifiedEmailToken(String verifiedEmailToken) { this.verifiedEmailToken = verifiedEmailToken; }
 }

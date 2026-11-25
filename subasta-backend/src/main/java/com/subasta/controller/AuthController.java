@@ -136,6 +136,13 @@ public class AuthController {
         // Login exitoso: limpiar contador de intentos fallidos
         loginAttemptService.clearAttempts(identifier);
 
+        if (!isUserApproved(u)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "error", "Tus datos están en validación. Tu cuenta aún no ha sido aprobada por un administrador."
+            ));
+        }
+
         String accessToken = jwtService.createAccessToken(u.getEmail(), u.getRol());
 
         Map<String, Object> userData = new HashMap<>();
@@ -178,6 +185,16 @@ public class AuthController {
     @PostMapping("/send-code")
     public ResponseEntity<?> sendCode(@Valid @RequestBody SendCodeRequest request) {
         String email = request.getEmail().trim().toLowerCase();
+
+        if (Boolean.TRUE.equals(request.getCheckDuplicate())
+                && (usuarioRepository.existsByEmail(email)
+                || compradorRepository.findByEmail(email).isPresent()
+                || vendedorRepository.findByEmail(email).isPresent())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "success", false,
+                    "error", "Ya existe un usuario registrado con este correo electrónico."
+            ));
+        }
 
         if (verificationCodeService.isCooldownActive(email)) {
             long remaining = verificationCodeService.getCooldownSecondsRemaining(email);
@@ -241,9 +258,13 @@ public class AuthController {
             Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
             if (usuarioOpt.isPresent()) {
                 Usuario u = usuarioOpt.get();
-                String accessToken = jwtService.createAccessToken(email, u.getRol());
                 response.put("userExists", true);
-                response.put("accessToken", accessToken);
+                if (isUserApproved(u)) {
+                    String accessToken = jwtService.createAccessToken(email, u.getRol());
+                    response.put("accessToken", accessToken);
+                } else {
+                    response.put("pendingApproval", true);
+                }
 
                 Map<String, Object> userData = new HashMap<>();
                 userData.put("id", u.getId());
@@ -297,22 +318,46 @@ public class AuthController {
         }
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
-        String challengeToken;
-        if (usuarioOpt.isPresent() && Boolean.TRUE.equals(usuarioOpt.get().getActivo())) {
-            String challengeId = verificationCodeService.generateAndStoreCode(email);
-            String code = verificationCodeService.getCodeForChallenge(challengeId);
-            challengeToken = jwtService.createChallengeToken(email, challengeId);
-            emailService.sendPasswordResetCode(email, code);
-        } else {
-            // Anti-enumeración de usuarios (OWASP): misma respuesta y token sintético para no revelar existencia
-            challengeToken = jwtService.createChallengeToken(email, UUID.randomUUID().toString());
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "success", false,
+                    "error", "No existe una cuenta registrada con ese correo electrónico."
+            ));
         }
+
+        Usuario u = usuarioOpt.get();
+        if (("COMPRADOR".equalsIgnoreCase(u.getRol()) || "VENDEDOR".equalsIgnoreCase(u.getRol())) && !isUserApproved(u)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "error", "Tu cuenta aún no ha sido aprobada. No es posible recuperar la contraseña hasta que sea aprobada."
+            ));
+        }
+
+        String challengeId = verificationCodeService.generateAndStoreCode(email);
+        String code = verificationCodeService.getCodeForChallenge(challengeId);
+        String challengeToken = jwtService.createChallengeToken(email, challengeId);
+        emailService.sendPasswordResetCode(email, code);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Si tu correo se encuentra registrado, recibirás un código de verificación en breve.",
+                "message", "Código de verificación enviado a tu correo electrónico.",
                 "challengeToken", challengeToken
         ));
+    }
+
+    private boolean isUserApproved(Usuario u) {
+        String rol = u.getRol();
+        if ("COMPRADOR".equalsIgnoreCase(rol)) {
+            return compradorRepository.findByEmail(u.getEmail())
+                    .map(c -> "APROBADO".equalsIgnoreCase(c.getEstatus()))
+                    .orElseGet(() -> "APROBADO".equalsIgnoreCase(u.getEstatus()) && Boolean.TRUE.equals(u.getActivo()));
+        }
+        if ("VENDEDOR".equalsIgnoreCase(rol)) {
+            return vendedorRepository.findByEmail(u.getEmail())
+                    .map(v -> "APROBADO".equalsIgnoreCase(v.getEstatus()))
+                    .orElseGet(() -> "APROBADO".equalsIgnoreCase(u.getEstatus()) && Boolean.TRUE.equals(u.getActivo()));
+        }
+        return Boolean.TRUE.equals(u.getActivo());
     }
 
     @PostMapping("/verify-reset-code")

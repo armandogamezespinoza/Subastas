@@ -14,9 +14,9 @@ export const revisionApi = {
   getRequestDetail(tipo, id) {
     return request(`/revision/solicitudes/${encodeURIComponent(tipo)}/${encodeURIComponent(id)}`);
   },
-  updateStatus(tipo, id, estatus, motivo = '') {
+  updateStatus(tipo, id, estatus, motivo = '', asunto = '', mensaje = '') {
     return request(`/revision/solicitudes/${encodeURIComponent(tipo)}/${encodeURIComponent(id)}/estatus`, {
-      method: 'PUT', body: JSON.stringify({ estatus, motivo })
+      method: 'PUT', body: JSON.stringify({ estatus, motivo, asunto, mensaje })
     });
   },
   /**

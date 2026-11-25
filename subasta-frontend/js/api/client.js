@@ -41,9 +41,20 @@ export async function request(path, options = {}) {
     catch { payload = null; }
   }
   if (!response.ok) {
-    const message = payload && typeof payload === 'object'
-      ? (payload.error || payload.message || payload.mensaje || `Error ${response.status}`)
-      : (typeof payload === 'string' && payload ? payload : `Error ${response.status}`);
+    let message = `Error ${response.status}`;
+    if (payload && typeof payload === 'object') {
+      if (payload.details && typeof payload.details === 'object') {
+        const detailValues = Object.values(payload.details);
+        if (detailValues.length > 0 && detailValues[0]) {
+          message = detailValues[0];
+        }
+      }
+      if (message === `Error ${response.status}` || (payload.error && payload.error !== 'Validación fallida')) {
+        message = payload.error || payload.message || payload.mensaje || message;
+      }
+    } else if (typeof payload === 'string' && payload) {
+      message = payload;
+    }
     throw new ApiError(message, response.status, payload);
   }
   return payload;

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,15 +32,18 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
+
 <body class="min-h-screen bg-[#0F1115] text-[#FFFFFF] antialiased">
   <div class="app-shell">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="hamburger-btn" id="menuToggle" aria-label="Menú hamburguesa " aria-expanded="false" title="Menú hamburguesa ">
+        <button class="hamburger-btn" id="menuToggle" aria-label="Menú hamburguesa " aria-expanded="false"
+          title="Menú hamburguesa ">
           <i data-lucide="menu"></i>
         </button>
         <a class="brand" href="#" aria-label="Subasta inicio">
@@ -69,11 +73,11 @@
           </button>
         </div>
 
-        <div id="menuStructureDesc" class="drawer-structure-note hidden" aria-hidden="true">Abre un menú de 3 
-opciones:
-    Panel
-    Registro
-    Solicitudes</div>
+        <div id="menuStructureDesc" class="drawer-structure-note hidden" aria-hidden="true">Abre un menú de 3
+          opciones:
+          Panel
+          Registro
+          Solicitudes</div>
 
         <nav class="drawer-nav" aria-label="Navegación principal">
           <button class="nav-link active" data-view="overview"><i data-lucide="layout-dashboard"></i> Panel</button>
@@ -82,9 +86,9 @@ opciones:
         </nav>
 
         <div class="drawer-options-expansion hidden" aria-hidden="true">Opciones:
-    Centro de control
-        Solicitudes
-        Prox </div>
+          Centro de control
+          Solicitudes
+          Prox </div>
 
         <div class="nav-drawer-footer">
           <div class="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
@@ -96,7 +100,8 @@ opciones:
 
       <div class="topbar-right flex items-center gap-3">
         <div id="profileSessionRule" class="profile-session-rule hidden" aria-hidden="true">
-          <p class="m-0 leading-tight">Se abre un card con la info del usuario. Dando opción de cerrar sesión eliminando el JWT que ya tenía</p>
+          <p class="m-0 leading-tight">Se abre un card con la info del usuario. Dando opción de cerrar sesión eliminando
+            el JWT que ya tenía</p>
         </div>
         <button class="avatar" id="openAuth" aria-label="Abrir perfil de usuario" title="Mi perfil">
           <i data-lucide="user"></i>
@@ -108,26 +113,35 @@ opciones:
       <section class="hero-grid">
         <div class="hero-copy">
           <div class="eyebrow"><span class="eyebrow-line"></span> PLATAFORMA DE SUBASTAS</div>
-          <h1 id="heroSlogan" style="font-size: 44.06px; line-height: 1.15; font-weight: 800;">Las buenas oportunidades <br>Comienzan aquí </h1>
-          <p class="hero-description">Un espacio confiable para compradores y vendedores. Regístrate, comparte tus documentos y da seguimiento a cada paso, sin perder el ritmo.</p>
+          <h1 id="heroSlogan" style="font-size: 44.06px; line-height: 1.15; font-weight: 800;">Las buenas oportunidades
+            <br>Comienzan aquí
+          </h1>
+          <p class="hero-description">Un espacio confiable para compradores y vendedores. Regístrate, comparte tus
+            documentos y da seguimiento a cada paso, sin perder el ritmo.</p>
           <div class="hero-actions flex items-center gap-3">
-            <button class="btn btn-lime hero-create-highlight" id="heroCreateAccountBtn" data-hero-create data-view="onboarding" data-route="registro" style="background-color: var(--cta-urgent); color: #FFFFFF; font-weight: 800; box-shadow: 0 4px 20px rgba(255, 90, 30, 0.45); border: none;">
+            <button class="btn btn-lime hero-create-highlight" id="heroCreateAccountBtn" data-hero-create
+              data-view="onboarding" data-route="registro"
+              style="background-color: var(--cta-urgent); color: #FFFFFF; font-weight: 800; box-shadow: 0 4px 20px rgba(255, 90, 30, 0.45); border: none;">
               Crear Cuenta <i data-lucide="arrow-up-right"></i>
             </button>
             <button class="btn btn-ghost" id="heroLoginBtn" data-hero-login data-view="login" data-route="login">
               Iniciar Sesión <i data-lucide="log-in"></i>
             </button>
           </div>
-          <div class="trust-row"><span class="trust-avatars"><b>✓</b><b>✓</b><b>✓</b></span><span>Registro seguro <strong>·</strong> Revisión transparente</span></div>
+          <div class="trust-row"><span class="trust-avatars"><b>✓</b><b>✓</b><b>✓</b></span><span>Registro seguro
+              <strong>·</strong> Revisión transparente</span></div>
         </div>
         <div class="hero-visual" style="align-self: start;">
-          <div id="activeAuctionsBox" class="outlined-auctions-block rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 shadow-2xl" style="border: 1px solid rgba(255, 90, 30, 0.4);">
+          <div id="activeAuctionsBox"
+            class="outlined-auctions-block rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 shadow-2xl"
+            style="border: 1px solid rgba(255, 90, 30, 0.4);">
             <div class="flex flex-col items-center gap-4">
               <div class="w-12 h-12 rounded-full bg-[var(--cta-urgent)] flex items-center justify-center shadow-md">
                 <i data-lucide="gavel" class="w-6 h-6 text-white"></i>
               </div>
               <h3 class="text-lg font-extrabold text-white">Subastas Activas</h3>
-              <p class="text-sm text-[var(--text-secondary)] text-center max-w-xs">Explora los lotes en tiempo real y participa.</p>
+              <p class="text-sm text-[var(--text-secondary)] text-center max-w-xs">Explora los lotes en tiempo real y
+                participa.</p>
             </div>
 
             <!-- Feed dinámico de subastas — se carga desde la API -->
@@ -138,7 +152,8 @@ opciones:
                   <i data-lucide="gavel" class="w-5 h-5 text-[var(--cta-urgent)]"></i>
                 </span>
                 <p class="text-sm font-semibold text-white m-0">Próximamente</p>
-                <p class="text-xs text-[var(--text-secondary)] m-0 max-w-[200px]">Las subastas activas aparecerán aquí en tiempo real.</p>
+                <p class="text-xs text-[var(--text-secondary)] m-0 max-w-[200px]">Las subastas activas aparecerán aquí
+                  en tiempo real.</p>
               </div>
             </div>
           </div>
@@ -152,17 +167,31 @@ opciones:
           <span id="heroBuyers">—</span>
           <span id="heroSellers">—</span>
         </div>
-        <div class="section-heading"><div><div class="eyebrow dark">VISTA GENERAL</div><h2>Todo bajo control<span class="lime-period">.</span></h2></div><span class="updated-label"><i data-lucide="refresh-cw"></i> Datos del sistema</span></div>
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow dark">VISTA GENERAL</div>
+            <h2>Todo bajo control<span class="lime-period">.</span></h2>
+          </div><span class="updated-label"><i data-lucide="refresh-cw"></i> Datos del sistema</span>
+        </div>
         <div id="kpiCards" class="kpi-grid"></div>
         <div class="dashboard-grid">
           <article class="surface-card progress-card">
-            <div class="card-title-row"><div><span class="subheading">ESTADO DE SOLICITUDES</span><h3>Avance de revisión</h3></div><span class="round-icon"><i data-lucide="chart-no-axes-combined"></i></span></div>
+            <div class="card-title-row">
+              <div><span class="subheading">ESTADO DE SOLICITUDES</span>
+                <h3>Avance de revisión</h3>
+              </div><span class="round-icon"><i data-lucide="chart-no-axes-combined"></i></span>
+            </div>
             <div id="statusProgress" class="progress-list"></div>
           </article>
           <article class="surface-card quick-card">
-            <span class="subheading">SIGUIENTE PASO</span><h3>¿Qué quieres hacer?</h3>
-            <button class="quick-action" data-view="onboarding"><span class="quick-action-icon"><i data-lucide="user-plus"></i></span><span><strong>Registrar perfil</strong><small>Comienza como comprador o vendedor</small></span><i data-lucide="arrow-up-right"></i></button>
-            <button class="quick-action" data-view="review"><span class="quick-action-icon"><i data-lucide="file-check-2"></i></span><span><strong>Revisar solicitudes</strong><small>Consulta estados y documentación</small></span><i data-lucide="arrow-up-right"></i></button>
+            <span class="subheading">SIGUIENTE PASO</span>
+            <h3>¿Qué quieres hacer?</h3>
+            <button class="quick-action" data-view="onboarding"><span class="quick-action-icon"><i
+                  data-lucide="user-plus"></i></span><span><strong>Registrar perfil</strong><small>Comienza como
+                  comprador o vendedor</small></span><i data-lucide="arrow-up-right"></i></button>
+            <button class="quick-action" data-view="review"><span class="quick-action-icon"><i
+                  data-lucide="file-check-2"></i></span><span><strong>Revisar solicitudes</strong><small>Consulta
+                  estados y documentación</small></span><i data-lucide="arrow-up-right"></i></button>
           </article>
         </div>
       </section>
@@ -172,7 +201,8 @@ opciones:
           <div>
             <div class="eyebrow dark">ACCESO A LA PLATAFORMA</div>
             <h2>Bienvenido a Subasta<span class="lime-period">.</span></h2>
-            <p class="section-description">Inicia sesión con tu correo electrónico o crea una cuenta para participar en las subastas.</p>
+            <p class="section-description">Inicia sesión con tu correo electrónico o crea una cuenta para participar en
+              las subastas.</p>
           </div>
         </div>
 
@@ -192,23 +222,29 @@ opciones:
             <form id="loginForm">
               <label class="field">
                 <span>Correo - Telefono *</span>
-                <input id="loginEmail" type="text" required placeholder="tu@correo.com o teléfono de 10 dígitos" autocomplete="username">
+                <input id="loginEmail" type="text" required placeholder="tu@correo.com o teléfono de 10 dígitos"
+                  autocomplete="username">
               </label>
 
               <label class="field" style="margin-top: 14px;">
                 <span>Contraseña *</span>
-                <input id="loginPassword" name="loginPassword" type="password" placeholder="Contraseña de acceso" autocomplete="current-password">
+                <input id="loginPassword" name="loginPassword" type="password" placeholder="Contraseña de acceso"
+                  autocomplete="current-password">
               </label>
 
-              <div class="flex justify-end mt-2 text-xs" style="display: flex; justify-content: flex-end; margin-top: 8px; font-size: 13px;">
-                <button type="button" id="forgotPasswordBtn" class="text-[var(--text-secondary)] hover:text-white transition-colors underline-offset-2 hover:underline" style="color: var(--text-secondary); background: none; border: none; padding: 0; cursor: pointer;">
+              <div class="flex justify-end mt-2 text-xs"
+                style="display: flex; justify-content: flex-end; margin-top: 8px; font-size: 13px;">
+                <button type="button" id="forgotPasswordBtn"
+                  class="text-[var(--text-secondary)] hover:text-white transition-colors underline-offset-2 hover:underline"
+                  style="color: var(--text-secondary); background: none; border: none; padding: 0; cursor: pointer;">
                   Recuperar contraseña
                 </button>
               </div>
 
               <div id="loginOtpField" class="field hidden" style="margin-top: 14px;">
                 <span>Código de acceso (6 dígitos) *</span>
-                <input id="loginOtpCode" inputmode="numeric" maxlength="6" placeholder="000000" class="font-mono text-center tracking-widest text-lg">
+                <input id="loginOtpCode" inputmode="numeric" maxlength="6" placeholder="000000"
+                  class="font-mono text-center tracking-widest text-lg">
               </div>
 
               <!-- loginRoleSelect conservado oculto para preservar compatibilidad de tests existentes -->
@@ -231,24 +267,41 @@ opciones:
               </div>
             </form>
 
-           
+
           </div>
         </div>
       </section>
 
       <section id="onboardingView" class="view-section hidden">
-        <div class="section-heading"><div><div class="eyebrow dark">ALTA DE USUARIO</div><h2>Comienza con buen pie<span class="lime-period">.</span></h2><p class="section-description">Elige el perfil que mejor se adapta a ti. Puedes completar tus datos y adjuntar documentos en un solo flujo.</p></div></div>
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow dark">ALTA DE USUARIO</div>
+            <h2>Comienza con buen pie<span class="lime-period">.</span></h2>
+            <p class="section-description">Elige el perfil que mejor se adapta a ti. Puedes completar tus datos y
+              adjuntar documentos en un solo flujo.</p>
+          </div>
+        </div>
         <div class="onboarding-layout">
           <div class="surface-card form-card">
-            <div class="role-switch"><button class="role-option active" data-role="COMPRADOR"><i data-lucide="shopping-bag"></i><span><strong>Comprador</strong><small>Busco oportunidades</small></span><span class="role-check"><i data-lucide="check"></i></span></button><button class="role-option" data-role="VENDEDOR"><i data-lucide="store"></i><span><strong>Vendedor</strong><small>Quiero ofertar</small></span><span class="role-check"><i data-lucide="check"></i></span></button></div>
+            <div class="role-switch"><button class="role-option active" data-role="COMPRADOR"><i
+                  data-lucide="shopping-bag"></i><span><strong>Comprador</strong><small>Busco
+                    oportunidades</small></span><span class="role-check"><i
+                    data-lucide="check"></i></span></button><button class="role-option" data-role="VENDEDOR"><i
+                  data-lucide="store"></i><span><strong>Vendedor</strong><small>Quiero ofertar</small></span><span
+                  class="role-check"><i data-lucide="check"></i></span></button></div>
 
-            <div id="registrationSuccessMessage" class="registration-success-card hidden surface-card p-6 rounded-2xl text-center border border-[var(--status-success)] bg-[#16191E] my-4">
-              <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 text-2xl font-bold">✓</div>
-              <h3 class="text-lg font-bold text-white mb-2 whitespace-pre-line">Felicidades
-creaste la cuenta correctamente.</h3>
-              <p class="text-sm text-[var(--text-secondary)] mb-4 whitespace-pre-line">Para activarla, sigue los pasos que se
-mandaron a tu correo.</p>
-              <button type="button" id="successToLoginBtn" data-route="login" data-view="login" class="btn btn-lime">Ir a Iniciar Sesión <i data-lucide="arrow-right"></i></button>
+            <div id="registrationSuccessMessage"
+              class="registration-success-card hidden surface-card p-6 rounded-2xl text-center border border-[var(--status-success)] bg-[#16191E] my-4">
+              <div
+                class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 text-2xl font-bold">
+                ✓</div>
+              <h3 class="text-lg font-bold text-white mb-2 whitespace-pre-line">Hemos recibido tu petición para dar de
+                alta tu usuario en la plataforma de subastas</h3>
+              <p class="text-sm text-[var(--text-secondary)] mb-4 whitespace-pre-line">En breve un administrador de la
+                plataforma la estará revisando y se pondrá en contacto contigo.
+                Te notificaremos por correo electrónico.</p>
+              <button type="button" id="successToLoginBtn" data-route="login" data-view="login" class="btn btn-lime">Ir
+                a Iniciar Sesión <i data-lucide="arrow-right"></i></button>
             </div>
 
             <form id="onboardingForm" class="form-grid">
@@ -256,26 +309,52 @@ mandaron a tu correo.</p>
               <div id="onboardingDocInstruction" class="onboarding-instruction hidden" aria-hidden="true">
                 <i data-lucide="info"></i> Mismos campos hasta ahora, <br>con la documentación obligatoria
               </div>
-              <div class="form-section-title"><span>01</span><div><strong>Información de contacto</strong><small>Usaremos estos datos para comunicarnos contigo.</small></div></div>
+              <div class="form-section-title"><span>01</span>
+                <div><strong>Información de contacto</strong><small>Usaremos estos datos para comunicarnos
+                    contigo.</small></div>
+              </div>
               <label class="field">
                 <span>Correo electrónico *</span>
-                <input type="email" id="onboardingEmail" name="email" required placeholder="tu@correo.com">
-                <span id="emailVerifyBadge" class="text-xs text-amber-500 mt-1 inline-flex items-center gap-1"><i data-lucide="mail-check"></i> Requiere verificación por código antes de enviar</span>
-                <div id="emailValidationRule" class="email-validation-rule text-xs text-rose-400 font-medium mt-1">Se requiere validar el correo antes de crear la cuenta</div>
+                <div class="flex gap-2 items-center">
+                  <input type="email" id="onboardingEmail" name="email" required placeholder="tu@correo.com"
+                    class="flex-1">
+                  <button type="button" id="verifyOnboardingEmailBtn" class="btn btn-dark flex-shrink-0"
+                    style="padding: 10px 14px; font-size: 11px;">Verificar correo</button>
+                </div>
+                <span id="emailVerifyBadge" class="text-xs text-amber-500 mt-1 inline-flex items-center gap-1"><i
+                    data-lucide="mail-check"></i> Requiere verificación por código antes de enviar</span>
+                <div id="emailValidationRule" class="email-validation-rule text-xs text-rose-400 font-medium mt-1">Se
+                  requiere validar el correo antes de crear la cuenta</div>
               </label>
-              <label class="field"><span>Teléfono *</span><input name="telefono" required inputmode="tel" placeholder="10 dígitos"></label>
-              <label class="field full"><span>Tipo de persona *</span><select name="tipoPersona" id="tipoPersona" required><option value="FISICA">Persona física</option><option value="MORAL">Persona moral</option></select></label>
+              <label class="field"><span>Teléfono *</span><input name="telefono" required inputmode="tel"
+                  placeholder="10 dígitos"></label>
+              <label class="field full"><span>Tipo de persona *</span><select name="tipoPersona" id="tipoPersona"
+                  required>
+                  <option value="FISICA">Persona física</option>
+                  <option value="MORAL">Persona moral</option>
+                </select></label>
               <div id="personFields" class="field-grid full">
-                <label class="field" data-physical><span>Nombre(s) *</span><input name="nombres" required placeholder="Nombre(s)"></label>
-                <label class="field" data-physical><span>Apellido paterno *</span><input name="apellidoPaterno" required placeholder="Apellido paterno"></label>
-                <label class="field" data-physical><span>Apellido materno *</span><input name="apellidoMaterno" required placeholder="Apellido materno"></label>
-                <label class="field" data-physical><span>Fecha de nacimiento *</span><input type="date" name="fechaNacimiento" required></label>
-                <label class="field" data-physical><span>CURP *</span><input name="curp" required placeholder="18 caracteres" maxlength="18"></label>
-                <label class="field"><span>RFC *</span><input name="rfc" required placeholder="RFC" maxlength="13"></label>
-                <label class="field hidden" data-legal><span>Razón social *</span><input name="razonSocial" placeholder="Nombre de la empresa"></label>
-                <label class="field hidden" data-legal><span>Fecha de constitución *</span><input type="date" name="fechaConstitucion"></label>
+                <label class="field" data-physical><span>Nombre(s) *</span><input name="nombres" required
+                    placeholder="Nombre(s)"></label>
+                <label class="field" data-physical><span>Apellido paterno *</span><input name="apellidoPaterno" required
+                    placeholder="Apellido paterno"></label>
+                <label class="field" data-physical><span>Apellido materno *</span><input name="apellidoMaterno" required
+                    placeholder="Apellido materno"></label>
+                <label class="field" data-physical><span>Fecha de nacimiento * <small class="text-xs text-[var(--text-secondary)] font-normal">(día / mes / año)</small></span><input type="text"
+                    name="fechaNacimiento" required placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" title="Formato: dd/mm/aaaa (ejemplo: 15/05/1990)"></label>
+                <label class="field" data-physical><span>CURP *</span><input name="curp" required
+                    placeholder="18 caracteres" maxlength="18"></label>
+                <label class="field"><span>RFC *</span><input name="rfc" required placeholder="RFC"
+                    maxlength="13"></label>
+                <label class="field hidden" data-legal><span>Razón social *</span><input name="razonSocial"
+                    placeholder="Nombre de la empresa"></label>
+                <label class="field hidden" data-legal><span>Fecha de constitución * <small class="text-xs text-[var(--text-secondary)] font-normal">(día / mes / año)</small></span><input type="text"
+                    name="fechaConstitucion" placeholder="dd/mm/aaaa" maxlength="10" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" title="Formato: dd/mm/aaaa (ejemplo: 15/05/1990)"></label>
               </div>
-              <div class="form-section-title"><span>02</span><div><strong>Domicilio</strong><small>Información para verificar tu perfil con datos reales.</small></div></div>
+              <div class="form-section-title"><span>02</span>
+                <div><strong>Domicilio</strong><small>Información para verificar tu perfil con datos reales.</small>
+                </div>
+              </div>
               <label class="field">
                 <span>Estado *</span>
                 <select name="estado" id="estadoSelect" required>
@@ -290,31 +369,51 @@ mandaron a tu correo.</p>
               </label>
               <label class="field">
                 <span>Código postal *</span>
-                <input name="codigoPostal" id="codigoPostalInput" required inputmode="numeric" maxlength="5" placeholder="00000" list="cpList" autocomplete="off" disabled>
+                <input name="codigoPostal" id="codigoPostalInput" required inputmode="numeric" maxlength="5"
+                  placeholder="00000" list="cpList" autocomplete="off" disabled>
                 <datalist id="cpList"></datalist>
               </label>
               <label class="field">
                 <span>Colonia *</span>
-                <input name="colonia" id="coloniaInput" required placeholder="Colonia" list="coloniaList" autocomplete="off" disabled>
+                <input name="colonia" id="coloniaInput" required placeholder="Colonia" list="coloniaList"
+                  autocomplete="off" disabled>
                 <datalist id="coloniaList"></datalist>
               </label>
               <label class="field full">
                 <span>Calle y número *</span>
-                <input name="calle" id="calleInput" required placeholder="Calle, número exterior e interior" list="calleList" autocomplete="off" disabled>
+                <input name="calle" id="calleInput" required placeholder="Calle, número exterior e interior"
+                  list="calleList" autocomplete="off" disabled>
                 <datalist id="calleList"></datalist>
               </label>
-              <div class="form-section-title"><span>03</span><div><strong>Documentación</strong><small>Todos los documentos son requeridos para validar tu perfil.</small></div></div>
+              <div class="form-section-title"><span>03</span>
+                <div><strong>Documentación</strong><small>Todos los documentos son requeridos para validar tu
+                    perfil.</small></div>
+              </div>
               <div id="documentFields" class="document-grid"></div>
-              <label class="field full"><span>Crear contraseña *</span><input type="password" name="password" minlength="8" required placeholder="Mínimo 8 caracteres"></label>
+              <label class="field full">
+                <span>Crear contraseña *</span>
+                <input id="onboardingPassword" type="password" name="password" minlength="8" required placeholder="Mínimo 8 caracteres (mayúscula, minúscula, número y símbolo)">
+                <small class="text-xs text-[var(--text-secondary)] mt-1">Debe incluir al menos 8 caracteres, mayúscula, minúscula, número y carácter especial.</small>
+              </label>
               <div class="form-submit full">
                 <p><i data-lucide="shield-check"></i> Tus datos se envían de forma segura al sistema.</p>
-                <button class="btn btn-lime" id="submitOnboardingBtn" type="submit">Enviar solicitud <i data-lucide="arrow-right"></i></button>
-                <button type="button" id="onboardingToLoginBtn" data-route="login" data-view="login" class="to-login-link block w-full text-center text-xs font-semibold text-[var(--cta-urgent)] mt-3 hover:underline">
-                  Opcion para ir a iniciar sesión si ya se tiene cuenta
-                </button>              </div>
+                <button class="btn btn-lime" id="submitOnboardingBtn" type="submit">Enviar solicitud <i
+                    data-lucide="arrow-right"></i></button>
+              </div>
             </form>
           </div>
-          <aside class="onboarding-aside"><div class="aside-dark"><span class="aside-symbol"><i data-lucide="shield-check"></i></span><span class="subheading">UN PROCESO CLARO</span><h3>De registro a revisión, sin complicaciones.</h3><p>Completa la información solicitada y el equipo de revisión dará seguimiento a tu solicitud.</p><div class="aside-step"><b>1</b><span><strong>Registra tus datos</strong><small>Información básica y contacto.</small></span></div><div class="aside-step"><b>2</b><span><strong>Adjunta documentos</strong><small>Archivos para validar tu identidad.</small></span></div><div class="aside-step"><b>3</b><span><strong>Da seguimiento</strong><small>Consulta el estatus de tu folio.</small></span></div></div></aside>
+          <aside class="onboarding-aside">
+            <div class="aside-dark">
+              <h3>De registro a revisión, sin complicaciones.</h3>
+              <p>Completa la información solicitada y el equipo de revisión dará seguimiento a tu solicitud.</p>
+              <div class="aside-step"><b>1</b><span><strong>Registra tus datos</strong><small>Información básica y
+                    contacto.</small></span></div>
+              <div class="aside-step"><b>2</b><span><strong>Adjunta documentos</strong><small>Archivos para validar tu
+                    identidad.</small></span></div>
+              <div class="aside-step"><b>3</b><span><strong>Da seguimiento</strong><small>Consulta el estatus de tu
+                    folio.</small></span></div>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -328,13 +427,29 @@ mandaron a tu correo.</p>
           <button class="btn btn-dark" id="refreshRequests"><i data-lucide="refresh-cw"></i> Refrescar</button>
         </div>
 
-        <div id="reviewStatesList" class="review-states-vertical mb-4 p-4 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)]">
-          <div class="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Estados de solicitudes:</div>
+        <div id="reviewStatesList"
+          class="review-states-vertical mb-4 p-4 rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)]">
+          <div class="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Estados de
+            solicitudes:</div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="EN_REVISION"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> <strong>En revisión</strong></div>
-            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="RECIBIDO"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> <strong>Recibido</strong></div>
-            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="APROBADO"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <strong>Aprobado</strong></div>
-            <div class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]" data-status="NEGADO"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> <strong>Negado</strong></div>
+            <div
+              class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]"
+              data-status="EN_REVISION"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> <strong>En
+                revisión</strong></div>
+            <div
+              class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]"
+              data-status="RECIBIDO"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <strong>Recibido</strong>
+            </div>
+            <div
+              class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]"
+              data-status="APROBADO"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <strong>Aprobado</strong>
+            </div>
+            <div
+              class="state-item flex items-center gap-2 text-xs py-2 px-3 rounded-lg bg-[#101318] border border-[var(--border-card)]"
+              data-status="NEGADO"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> <strong>Negado</strong>
+            </div>
           </div>
         </div>
 
@@ -342,115 +457,189 @@ mandaron a tu correo.</p>
           <span>Al seleccionar alguna <br>debe aparecer un card como el siguiente</span>
         </div>
         <div class="surface-card table-card">
-          <div class="table-toolbar"><div class="search-box"><i data-lucide="search"></i><input id="searchRequests" type="search" placeholder="Buscar por nombre, folio o RFC..."></div><div class="filter-group"><select id="typeFilter" aria-label="Filtrar por tipo"><option value="">Todos los perfiles</option><option value="COMPRADOR">Compradores</option><option value="VENDEDOR">Vendedores</option></select><select id="statusFilter" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="ENVIADO">Enviado</option><option value="EN_REVISION">En revisión</option><option value="APROBADO">Aprobado</option><option value="RECHAZADO">Rechazado</option></select></div></div>
+          <div class="table-toolbar">
+            <div class="search-box"><i data-lucide="search"></i><input id="searchRequests" type="search"
+                placeholder="Buscar por nombre, folio o RFC..."></div>
+            <div class="filter-group"><select id="typeFilter" aria-label="Filtrar por tipo">
+                <option value="">Todos los perfiles</option>
+                <option value="COMPRADOR">Compradores</option>
+                <option value="VENDEDOR">Vendedores</option>
+              </select><select id="statusFilter" aria-label="Filtrar por estado">
+                <option value="">Todos los estados</option>
+                <option value="ENVIADO">Enviado</option>
+                <option value="EN_REVISION">En revisión</option>
+                <option value="APROBADO">Aprobado</option>
+                <option value="RECHAZADO">Rechazado</option>
+              </select></div>
+          </div>
           <div id="requestsTable"></div>
-          <div class="table-foot"><span id="requestCount">0 solicitudes</span><span>Los cambios se guardan en el sistema</span></div>
+          <div class="table-foot"><span id="requestCount">0 solicitudes</span><span>Los cambios se guardan en el
+              sistema</span></div>
         </div>
       </section>
-      <footer class="footer"><span>© <span id="year"></span> Subasta. Hecho para avanzar.</span><span><span class="footer-dot"></span> Plataforma de registro y revisión</span></footer>
+      <footer class="footer"><span>© <span id="year"></span> Subasta. Hecho para avanzar.</span><span><span
+            class="footer-dot"></span> Plataforma de registro y revisión</span></footer>
     </main>
   </div>
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
   <div id="authModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <div class="auth-modal"><button class="modal-close" id="closeAuth" aria-label="Cerrar"><i data-lucide="x"></i></button><div class="modal-brand"><span class="brand-mark"><i data-lucide="gavel"></i></span></div><div class="eyebrow dark">ACCESO SEGURO</div><h2 id="authTitle">Bienvenido de vuelta<span class="lime-period">.</span></h2><p class="section-description">Verifica tu correo con un código de un solo uso.</p>
-      <form id="authForm"><label class="field"><span>Correo electrónico</span><input id="authEmail" type="email" required placeholder="tu@correo.com"></label><div id="otpField" class="field hidden"><span>Código de verificación</span><input id="otpCode" inputmode="numeric" maxlength="6" placeholder="000000"></div><button id="authSubmit" class="btn btn-lime full-button" type="submit">Enviar código <i data-lucide="arrow-right"></i></button></form><p class="auth-note"><i data-lucide="lock-keyhole"></i> Protegido con verificación por correo</p>
+    <div class="auth-modal"><button class="modal-close" id="closeAuth" aria-label="Cerrar"><i
+          data-lucide="x"></i></button>
+      <div class="modal-brand"><span class="brand-mark"><i data-lucide="gavel"></i></span></div>
+      <div class="eyebrow dark">ACCESO SEGURO</div>
+      <h2 id="authTitle">Bienvenido de vuelta<span class="lime-period">.</span></h2>
+      <p class="section-description">Verifica tu correo con un código de un solo uso.</p>
+      <form id="authForm"><label class="field"><span>Correo electrónico</span><input id="authEmail" type="email"
+            required placeholder="tu@correo.com"></label>
+        <div id="otpField" class="field hidden"><span>Código de verificación</span><input id="otpCode"
+            inputmode="numeric" maxlength="6" placeholder="000000"></div><button id="authSubmit"
+          class="btn btn-lime full-button" type="submit">Enviar código <i data-lucide="arrow-right"></i></button>
+      </form>
+      <p class="auth-note"><i data-lucide="lock-keyhole"></i> Protegido con verificación por correo</p>
     </div>
   </div>
   <div id="verifyModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
-    <div class="auth-modal"><button class="modal-close" id="closeVerify" aria-label="Cerrar"><i data-lucide="x"></i></button>
+    <div class="auth-modal"><button class="modal-close" id="closeVerify" aria-label="Cerrar"><i
+          data-lucide="x"></i></button>
       <div class="modal-brand"><span class="brand-mark"><i data-lucide="shield-check"></i></span></div>
       <div class="eyebrow dark">VERIFICACIÓN PREVIA AL REGISTRO</div>
       <h2 id="verifyTitle">Confirma tu correo<span class="lime-period">.</span></h2>
-      <p class="section-description">Antes de dar de alta tu cuenta en el backend, hemos enviado un código de 6 dígitos a: <strong id="verifyEmailDisplay"></strong></p>
+      <p class="section-description">Antes de dar de alta tu cuenta, hemos enviado un código de 6 dígitos a: <strong
+          id="verifyEmailDisplay"></strong></p>
       <form id="verifyForm">
         <label class="field">
           <span>Código de verificación (6 dígitos) *</span>
-          <input id="verifyOtpCode" inputmode="numeric" maxlength="6" required placeholder="123456" class="font-mono text-center tracking-widest text-lg">
+          <input id="verifyOtpCode" inputmode="numeric" maxlength="6" required placeholder="123456"
+            class="font-mono text-center tracking-widest text-lg">
         </label>
         <div class="flex gap-2 mt-4">
-          <button id="resendVerifyCodeBtn" class="btn btn-ghost flex-1" type="button"><i data-lucide="refresh-cw"></i> Reenviar código</button>
-          <button id="confirmVerifyBtn" class="btn btn-lime flex-1" type="submit">Validar y registrar <i data-lucide="arrow-right"></i></button>
+          <button id="resendVerifyCodeBtn" class="btn btn-ghost flex-1" type="button"><i data-lucide="refresh-cw"></i>
+            Reenviar código</button>
+          <button id="confirmVerifyBtn" class="btn btn-lime flex-1" type="submit">Validar y registrar <i
+              data-lucide="arrow-right"></i></button>
         </div>
       </form>
-      <p class="auth-note mt-3"><i data-lucide="info"></i> Tu solicitud solo se enviará una vez verificado el código.</p>
+      <p class="auth-note mt-3"><i data-lucide="info"></i> Tu solicitud solo se enviará una vez verificado el código.
+      </p>
     </div>
   </div>
-  <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><div class="detail-modal"><button class="modal-close" id="closeDetail" aria-label="Cerrar"><i data-lucide="x"></i></button><div id="detailContent"></div></div></div>
-  <div id="docPreviewModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="docPreviewTitle">
-    <div class="detail-modal doc-preview-modal" style="width: min(100%, 920px); max-height: 92vh; display: flex; flex-direction: column;">
+  <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="detail-modal"><button class="modal-close" id="closeDetail" aria-label="Cerrar"><i
+          data-lucide="x"></i></button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+  <div id="docPreviewModal" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+    aria-labelledby="docPreviewTitle">
+    <div class="detail-modal doc-preview-modal"
+      style="width: min(100%, 920px); max-height: 92vh; display: flex; flex-direction: column;">
       <div class="detail-title-row" style="margin-bottom: 0; padding-bottom: 12px;">
         <div>
           <div class="eyebrow dark">VISUALIZADOR DE EXPEDIENTE</div>
           <h2 id="docPreviewTitle" style="font-size: 18px; margin: 4px 0 0;">Documento</h2>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <a id="docPreviewExternalBtn" href="#" target="_blank" class="btn btn-ghost" style="padding: 8px 12px; font-size: 10px;">
+          <a id="docPreviewExternalBtn" href="#" target="_blank" class="btn btn-ghost"
+            style="padding: 8px 12px; font-size: 10px;">
             <i data-lucide="external-link"></i> Abrir en pestaña
           </a>
-          <a id="docPreviewDownloadBtn" href="#" download class="btn btn-lime" style="padding: 8px 12px; font-size: 10px;">
+          <a id="docPreviewDownloadBtn" href="#" download class="btn btn-lime"
+            style="padding: 8px 12px; font-size: 10px;">
             <i data-lucide="download"></i> Descargar
           </a>
-          <button class="modal-close" id="closeDocPreview" aria-label="Cerrar" style="position: static;"><i data-lucide="x"></i></button>
+          <button class="modal-close" id="closeDocPreview" aria-label="Cerrar" style="position: static;"><i
+              data-lucide="x"></i></button>
         </div>
       </div>
-      <div class="doc-preview-body" style="flex: 1; min-height: 540px; margin-top: 14px; background: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative;">
-        <img id="docPreviewImg" class="hidden" style="max-width: 100%; max-height: 540px; object-fit: contain; margin: auto; padding: 12px;" alt="Vista previa de documento">
+      <div class="doc-preview-body"
+        style="flex: 1; min-height: 540px; margin-top: 14px; background: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative;">
+        <img id="docPreviewImg" class="hidden"
+          style="max-width: 100%; max-height: 540px; object-fit: contain; margin: auto; padding: 12px;"
+          alt="Vista previa de documento">
         <iframe id="docPreviewFrame" style="width: 100%; height: 540px; border: 0;" src="about:blank"></iframe>
         <div id="docPreviewError" class="hidden" style="text-align: center; padding: 32px 20px; max-width: 480px;">
-          <div style="width: 52px; height: 52px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">!</div>
-          <h3 style="font-size: 16px; font-weight: 600; color: #1e293b; margin: 0 0 8px;">No se pudo previsualizar el documento</h3>
-          <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0 0 16px;">El archivo no se encuentra disponible en el almacenamiento del servidor. Si esta solicitud fue creada antes de activar el almacenamiento persistente, por favor registra una nueva solicitud con documentos actualizados.</p>
+          <div
+            style="width: 52px; height: 52px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px;">
+            !</div>
+          <h3 style="font-size: 16px; font-weight: 600; color: #1e293b; margin: 0 0 8px;">No se pudo previsualizar el
+            documento</h3>
+          <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0 0 16px;">El archivo no se encuentra
+            disponible en el almacenamiento del servidor. Si esta solicitud fue creada antes de activar el
+            almacenamiento persistente, por favor registra una nueva solicitud con documentos actualizados.</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Modal / Card de Perfil de Usuario -->
-  <div id="userProfileModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="profileUserName">
+  <div id="userProfileModal" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+    aria-labelledby="profileUserName">
     <div class="auth-modal user-profile-card" style="width: min(100%, 460px);">
       <button class="modal-close" id="closeProfile" aria-label="Cerrar"><i data-lucide="x"></i></button>
-      <div class="profile-card-header" style="display: flex; align-items: center; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--border-card);">
-        <div class="profile-avatar-large" id="profileAvatarLarge" style="width: 52px; height: 52px; border-radius: 14px; background: var(--navy-accent); border: 1px solid var(--border-card); color: var(--cta-urgent); font-weight: 800; font-size: 22px; display: grid; place-items: center;">U</div>
+      <div class="profile-card-header"
+        style="display: flex; align-items: center; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--border-card);">
+        <div class="profile-avatar-large" id="profileAvatarLarge"
+          style="width: 52px; height: 52px; border-radius: 14px; background: var(--navy-accent); border: 1px solid var(--border-card); color: var(--cta-urgent); font-weight: 800; font-size: 22px; display: grid; place-items: center;">
+          U</div>
         <div class="profile-header-info" style="min-width: 0;">
           <div class="eyebrow dark">DATOS DE LA CUENTA</div>
-          <h2 id="profileUserName" style="font-size: 19px; margin: 4px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Usuario</h2>
-          <span id="profileUserEmail" style="font-size: 11px; color: var(--text-secondary); display: block; overflow: hidden; text-overflow: ellipsis;">correo@ejemplo.com</span>
+          <h2 id="profileUserName"
+            style="font-size: 19px; margin: 4px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            Usuario</h2>
+          <span id="profileUserEmail"
+            style="font-size: 11px; color: var(--text-secondary); display: block; overflow: hidden; text-overflow: ellipsis;">correo@ejemplo.com</span>
         </div>
       </div>
 
-      <div class="profile-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
-        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+      <div class="profile-details-grid"
+        style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+        <div class="profile-detail-item"
+          style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
           <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">ROL</small>
           <strong id="profileUserRole" style="font-size: 11px; color: #FFFFFF;">COMPRADOR</strong>
         </div>
-        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
-          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">FOLIO ASIGNADO</small>
+        <div class="profile-detail-item"
+          style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">FOLIO
+            ASIGNADO</small>
           <strong id="profileUserFolio" style="font-size: 11px; color: #FFFFFF;">CMP-0001</strong>
         </div>
-        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
-          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">ESTATUS</small>
+        <div class="profile-detail-item"
+          style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small
+            style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">ESTATUS</small>
           <span id="profileUserStatus" class="status-pill status-APROBADO" style="font-size: 9px;">ACTIVO</span>
         </div>
-        <div class="profile-detail-item" style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
-          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">SEGURIDAD</small>
+        <div class="profile-detail-item"
+          style="background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small
+            style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">SEGURIDAD</small>
           <span style="font-size: 10px; color: var(--status-success); font-weight: 600;">Verificado ✓</span>
         </div>
-        <div class="profile-detail-item" style="grid-column: span 2; background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
-          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">CAPACIDADES DEL ROL</small>
-          <div id="profileRoleCapabilities" style="font-size: 11px; color: #FFFFFF; line-height: 1.4;">Acceso estándar a la plataforma.</div>
+        <div class="profile-detail-item"
+          style="grid-column: span 2; background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">CAPACIDADES
+            DEL ROL</small>
+          <div id="profileRoleCapabilities" style="font-size: 11px; color: #FFFFFF; line-height: 1.4;">Acceso estándar a
+            la plataforma.</div>
         </div>
-        <div class="profile-detail-item" style="grid-column: span 2; background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
-          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">PRINCIPIO DE DISEÑO</small>
-          <div id="profileDesignPrinciple" style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">La plataforma nunca actúa a nombre de un tercero con datos sin verificar</div>
+        <div class="profile-detail-item"
+          style="grid-column: span 2; background: #101318; border: 1px solid var(--border-card); padding: 12px; border-radius: 10px;">
+          <small style="display: block; font-size: 9px; color: var(--text-secondary); margin-bottom: 4px;">PRINCIPIO DE
+            DISEÑO</small>
+          <div id="profileDesignPrinciple" style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">La
+            plataforma nunca actúa a nombre de un tercero con datos sin verificar</div>
         </div>
       </div>
 
 
       <div class="profile-actions-column" style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
-        <button id="updateProfileRequestBtn" class="btn btn-ghost" type="button" style="width: 100%; justify-content: center;">
+        <button id="updateProfileRequestBtn" class="btn btn-ghost" type="button"
+          style="width: 100%; justify-content: center;">
           <i data-lucide="file-pen-line"></i> Actualizar datos con una solicitud
         </button>
-        <button id="logoutBtn" class="btn btn-dark" type="button" style="width: 100%; justify-content: center; color: #EF4444; border-color: rgba(239, 68, 68, 0.25);">
+        <button id="logoutBtn" class="btn btn-dark" type="button"
+          style="width: 100%; justify-content: center; color: #EF4444; border-color: rgba(239, 68, 68, 0.25);">
           <i data-lucide="log-out"></i> Cerrar sesión
         </button>
       </div>
@@ -458,7 +647,8 @@ mandaron a tu correo.</p>
   </div>
 
   <!-- Modal: Recuperar Contraseña (flujo OTP → Restablecer contraseña) -->
-  <div id="forgotPasswordModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="forgotPasswordTitle">
+  <div id="forgotPasswordModal" class="modal-backdrop hidden" role="dialog" aria-modal="true"
+    aria-labelledby="forgotPasswordTitle">
     <div class="auth-modal" style="width: min(100%, 420px); padding: 32px;">
       <button class="modal-close" id="closeForgotPassword" aria-label="Cerrar"><i data-lucide="x"></i></button>
 
@@ -467,7 +657,8 @@ mandaron a tu correo.</p>
         <div class="eyebrow dark" style="margin-bottom: 8px;">RECUPERAR ACCESO</div>
         <h2 id="forgotPasswordTitle" style="font-size: 20px; margin-bottom: 6px;">Recuperar contraseña</h2>
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
-          Ingresa tu correo electrónico registrado y te enviaremos un código de verificación para restablecer tu contraseña.
+          Ingresa tu correo electrónico registrado y te enviaremos un código de verificación para restablecer tu
+          contraseña.
         </p>
         <form id="forgotStep1Form">
           <label class="field">
@@ -484,18 +675,21 @@ mandaron a tu correo.</p>
       <div id="forgotStep2" class="hidden">
         <div class="eyebrow dark" style="margin-bottom: 8px;">CÓDIGO DE VERIFICACIÓN</div>
         <h2 style="font-size: 20px; margin-bottom: 6px;">Ingresa el código</h2>
-        <p id="forgotStep2Info" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
+        <p id="forgotStep2Info"
+          style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">
           Enviamos un código de 6 dígitos a tu correo. Ingrésalo a continuación para continuar.
         </p>
         <form id="forgotStep2Form">
           <label class="field">
             <span>Código de verificación *</span>
-            <input id="forgotOtpCode" inputmode="numeric" maxlength="6" required placeholder="000000" class="font-mono text-center tracking-widest text-lg" autocomplete="one-time-code">
+            <input id="forgotOtpCode" inputmode="numeric" maxlength="6" required placeholder="000000"
+              class="font-mono text-center tracking-widest text-lg" autocomplete="one-time-code">
           </label>
           <button type="submit" id="forgotVerifyBtn" class="btn btn-lime full-button" style="margin-top: 16px;">
             Verificar código <i data-lucide="arrow-right"></i>
           </button>
-          <button type="button" id="forgotResendBtn" class="btn btn-ghost full-button" style="margin-top: 8px; font-size: 12px;">
+          <button type="button" id="forgotResendBtn" class="btn btn-ghost full-button"
+            style="margin-top: 8px; font-size: 12px;">
             Reenviar código
           </button>
         </form>
@@ -511,11 +705,13 @@ mandaron a tu correo.</p>
         <form id="forgotStep3Form">
           <label class="field">
             <span>Nueva contraseña *</span>
-            <input id="forgotNewPassword" type="password" required minlength="8" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+            <input id="forgotNewPassword" type="password" required minlength="8" placeholder="Mínimo 8 caracteres"
+              autocomplete="new-password">
           </label>
           <label class="field" style="margin-top: 12px;">
             <span>Confirmar contraseña *</span>
-            <input id="forgotConfirmPassword" type="password" required minlength="8" placeholder="Repite tu nueva contraseña" autocomplete="new-password">
+            <input id="forgotConfirmPassword" type="password" required minlength="8"
+              placeholder="Repite tu nueva contraseña" autocomplete="new-password">
           </label>
           <button type="submit" id="forgotResetBtn" class="btn btn-lime full-button" style="margin-top: 16px;">
             Actualizar contraseña <i data-lucide="check"></i>
@@ -525,7 +721,9 @@ mandaron a tu correo.</p>
 
       <!-- Paso 4: Éxito -->
       <div id="forgotStep4" class="hidden" style="text-align: center; padding: 20px 0;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; font-weight: 700;">✓</div>
+        <div
+          style="width: 56px; height: 56px; border-radius: 50%; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; font-weight: 700;">
+          ✓</div>
         <h2 style="font-size: 20px; margin-bottom: 8px;">Contraseña actualizada</h2>
         <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5;">
           Tu contraseña ha sido actualizada exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.
@@ -540,4 +738,5 @@ mandaron a tu correo.</p>
   <script type="module" src="js/app.js"></script>
 
 </body>
+
 </html>

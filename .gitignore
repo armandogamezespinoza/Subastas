@@ -17,6 +17,9 @@ target/
 .vscode/
 *.iml
 
-# AI Agent workspaces (datos locales, no deben ir al repo)
+# AI Agent workspaces & local transcripts (datos locales, no deben ir al repo)
 .gemini/
 .codex/
+PowerShell_transcript*.txt
+cp.txt
+*.log

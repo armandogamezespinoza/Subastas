@@ -48,6 +48,9 @@ public class Usuario {
 
     private Boolean activo = true;
 
+    @Column(length = 30)
+    private String estatus = "APROBADO";
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
@@ -86,6 +89,9 @@ public class Usuario {
 
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+
+    public String getEstatus() { return estatus; }
+    public void setEstatus(String estatus) { this.estatus = estatus; }
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }

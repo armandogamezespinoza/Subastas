@@ -36,6 +36,15 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateResource(DuplicateResourceException exc) {
+        log.warn("Conflicto por recurso duplicado: {}", exc.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "success", false,
+                "error", exc.getMessage()
+        ));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException exc) {
         log.warn("Solicitud inválida: {}", exc.getMessage());
@@ -51,9 +60,15 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage()));
 
+        String firstError = ex.getBindingResult().getFieldErrors().stream()
+                .map(org.springframework.validation.FieldError::getDefaultMessage)
+                .filter(msg -> msg != null && !msg.isBlank())
+                .findFirst()
+                .orElse("Validación fallida");
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "success", false,
-                "error", "Validación fallida",
+                "error", firstError,
                 "details", errors
         ));
     }

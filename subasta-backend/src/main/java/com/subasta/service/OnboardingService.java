@@ -6,10 +6,13 @@ import com.subasta.entity.Comprador;
 import com.subasta.entity.Documento;
 import com.subasta.entity.Usuario;
 import com.subasta.entity.Vendedor;
+import com.subasta.exception.DuplicateResourceException;
 import com.subasta.repository.CompradorRepository;
 import com.subasta.repository.DocumentoRepository;
 import com.subasta.repository.UsuarioRepository;
 import com.subasta.repository.VendedorRepository;
+import com.subasta.security.JwtService;
+import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,38 +31,76 @@ public class OnboardingService {
     private final DocumentoRepository documentoRepository;
     private final FileStorageService fileStorageService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public OnboardingService(UsuarioRepository usuarioRepository,
                              CompradorRepository compradorRepository,
                              VendedorRepository vendedorRepository,
                              DocumentoRepository documentoRepository,
                              FileStorageService fileStorageService,
-                             PasswordEncoder passwordEncoder) {
+                             PasswordEncoder passwordEncoder,
+                             JwtService jwtService) {
         this.usuarioRepository = usuarioRepository;
         this.compradorRepository = compradorRepository;
         this.vendedorRepository = vendedorRepository;
         this.documentoRepository = documentoRepository;
         this.fileStorageService = fileStorageService;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
+
+    private Usuario validateVerifiedEmailAndCreateUser(String rawEmail, String verifiedEmailToken, String rawPassword, String rol) {
+        if (rawEmail == null || rawEmail.isBlank()) {
+            throw new IllegalArgumentException("El correo electrónico es obligatorio.");
+        }
+        String email = rawEmail.trim().toLowerCase();
+
+        if (verifiedEmailToken == null || verifiedEmailToken.isBlank()) {
+            throw new IllegalArgumentException("Debes verificar tu correo electrónico antes de completar el registro.");
+        }
+        try {
+            Claims claims = jwtService.parseToken(verifiedEmailToken);
+            if (!"EMAIL_VERIFIED".equals(claims.get("type", String.class))
+                    || !email.equalsIgnoreCase(claims.getSubject())) {
+                throw new IllegalArgumentException("El token de verificación de correo no corresponde al correo ingresado.");
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("El token de verificación de correo es inválido o ha expirado.");
+        }
+
+        if (usuarioRepository.existsByEmail(email)
+                || compradorRepository.findByEmail(email).isPresent()
+                || vendedorRepository.findByEmail(email).isPresent()) {
+            throw new DuplicateResourceException("Ya existe un usuario registrado con este correo electrónico.");
+        }
+
+        String effectivePassword = rawPassword != null && !rawPassword.isBlank()
+                ? rawPassword
+                : UUID.randomUUID().toString().substring(0, 8);
+
+        if (rawPassword != null && !rawPassword.isBlank()) {
+            if (!rawPassword.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^()_+=\\-\\[\\]{}|;:,.<>])[A-Za-z\\d@$!%*?&#^()_+=\\-\\[\\]{}|;:,.<>]{8,}$")) {
+                throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y carácter especial.");
+            }
+        }
+
+        Usuario nuevo = new Usuario();
+        nuevo.setEmail(email);
+        nuevo.setPassword(passwordEncoder.encode(effectivePassword));
+        nuevo.setRol(rol);
+        nuevo.setActivo(false);
+        nuevo.setEstatus("ENVIADO");
+        nuevo.setFechaCreacion(LocalDateTime.now());
+        return nuevo;
     }
 
     @Transactional
     public String registerBuyer(BuyerRegistrationDto dto, Map<String, MultipartFile> files) {
-        Usuario user = usuarioRepository.findByEmail(dto.getEmail())
-                .orElseGet(() -> {
-                    String rawPassword = dto.getPassword() != null && !dto.getPassword().isBlank() 
-                            ? dto.getPassword() 
-                            : UUID.randomUUID().toString().substring(0, 8);
-                    
-                    Usuario nuevo = new Usuario();
-                    nuevo.setEmail(dto.getEmail());
-                    nuevo.setPassword(passwordEncoder.encode(rawPassword));
-                    nuevo.setTelefono(dto.getTelefono());
-                    nuevo.setRol("COMPRADOR");
-                    nuevo.setActivo(true);
-                    nuevo.setFechaCreacion(LocalDateTime.now());
-                    return usuarioRepository.save(nuevo);
-                });
+        Usuario nuevo = validateVerifiedEmailAndCreateUser(dto.getEmail(), dto.getVerifiedEmailToken(), dto.getPassword(), "COMPRADOR");
+        nuevo.setTelefono(dto.getTelefono());
+        Usuario user = usuarioRepository.save(nuevo);
 
         long count = compradorRepository.count() + 1;
         String folio = String.format("CMP-%04d", count);
@@ -67,7 +108,7 @@ public class OnboardingService {
         Comprador comprador = new Comprador();
         comprador.setFolio(folio);
         comprador.setUsuarioId(user.getId());
-        comprador.setEmail(dto.getEmail());
+        comprador.setEmail(user.getEmail());
         comprador.setTelefono(dto.getTelefono());
         comprador.setTipoPersona(dto.getTipoPersona());
         comprador.setNombres(dto.getNombres());
@@ -114,21 +155,9 @@ public class OnboardingService {
 
     @Transactional
     public String registerSeller(SellerRegistrationDto dto, Map<String, MultipartFile> files) {
-        Usuario user = usuarioRepository.findByEmail(dto.getEmail())
-                .orElseGet(() -> {
-                    String rawPassword = dto.getPassword() != null && !dto.getPassword().isBlank() 
-                            ? dto.getPassword() 
-                            : UUID.randomUUID().toString().substring(0, 8);
-                    
-                    Usuario nuevo = new Usuario();
-                    nuevo.setEmail(dto.getEmail());
-                    nuevo.setPassword(passwordEncoder.encode(rawPassword));
-                    nuevo.setTelefono(dto.getTelefono());
-                    nuevo.setRol("VENDEDOR");
-                    nuevo.setActivo(true);
-                    nuevo.setFechaCreacion(LocalDateTime.now());
-                    return usuarioRepository.save(nuevo);
-                });
+        Usuario nuevo = validateVerifiedEmailAndCreateUser(dto.getEmail(), dto.getVerifiedEmailToken(), dto.getPassword(), "VENDEDOR");
+        nuevo.setTelefono(dto.getTelefono());
+        Usuario user = usuarioRepository.save(nuevo);
 
         long count = vendedorRepository.count() + 1;
         String folio = String.format("VND-%04d", count);
@@ -136,7 +165,7 @@ public class OnboardingService {
         Vendedor vendedor = new Vendedor();
         vendedor.setFolio(folio);
         vendedor.setUsuarioId(user.getId());
-        vendedor.setEmail(dto.getEmail());
+        vendedor.setEmail(user.getEmail());
         vendedor.setTelefono(dto.getTelefono());
         vendedor.setTipoPersona(dto.getTipoPersona());
         vendedor.setNombres(dto.getNombres());
@@ -161,7 +190,10 @@ public class OnboardingService {
         vendedor.setCodigoPostal(dto.getCodigoPostal());
         vendedor.setColonia(dto.getColonia());
         vendedor.setCiudad(dto.getCiudad());
-        vendedor.setMunicipio(dto.getMunicipio());
+        String municipio = (dto.getMunicipio() != null && !dto.getMunicipio().isBlank())
+                ? dto.getMunicipio()
+                : (dto.getCiudad() != null && !dto.getCiudad().isBlank() ? dto.getCiudad() : "Culiacán");
+        vendedor.setMunicipio(municipio);
         vendedor.setEstado(dto.getEstado());
         vendedor.setPais(dto.getPais() != null ? dto.getPais() : "México");
         vendedor.setDomicilioOperacion(dto.getDomicilioOperacion());
