@@ -62,6 +62,12 @@ public class EmailService {
         dispatchEmail(toEmail, subject, content);
     }
 
+    @Async
+    public void sendCustomEmail(String toEmail, String subject, String body) {
+        log.info(">>> [EMAIL DISPATCH] Dispatching custom email to {} with subject '{}'", toEmail, subject);
+        dispatchEmail(toEmail, subject, body);
+    }
+
     private void dispatchEmail(String toEmail, String subject, String textContent) {
         if (brevoApiKey != null && !brevoApiKey.isBlank()) {
             sendViaBrevoApi(toEmail, subject, textContent);

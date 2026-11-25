@@ -2,7 +2,7 @@ import { authApi } from './api/authApi.js';
 import { onboardingApi } from './api/onboardingApi.js';
 import { revisionApi } from './api/revisionApi.js';
 import { renderKpiCards, renderStatusProgress } from './components/kpiCards.js';
-import { renderRequestsTable, filterRequests } from './components/requestsTable.js';
+import { renderRequestsTable, filterRequests, paginateRequests } from './components/requestsTable.js';
 import { resetAuthModal } from './components/authModal.js';
 import { toast, setLoading, setActiveView, escapeHtml } from './services/uiService.js';
 import { initAddressCascade } from './services/addressService.js';
@@ -183,6 +183,8 @@ export const state = {
   role: 'COMPRADOR',
   kpis: { totalCompradores: 0, totalVendedores: 0, total: 0, aprobados: 0, rechazados: 0, enRevision: 0, enviados: 0 },
   requests: [],
+  currentPage: 1,
+  pageSize: 10,
   challengeToken: '',
   verifiedEmailToken: '',
   verifiedEmail: '',
@@ -225,6 +227,7 @@ export function setRole(role, doc = document) {
   doc.querySelectorAll('.role-option').forEach(button => button.classList.toggle('active', button.dataset.role === role));
   renderDocumentFields(role, doc);
   updatePersonFields(doc);
+  updateOnboardingLockState(doc);
 }
 
 export function renderDocumentFields(role = state.role, doc = document) {
@@ -233,24 +236,24 @@ export function renderDocumentFields(role = state.role, doc = document) {
 
   const docs = role === 'COMPRADOR'
     ? [
-        ['cd-ine', 'Identificación oficial (INE / Pasaporte)'],
-        ['cd-curp', 'Constancia de CURP'],
-        ['cd-rfc', 'Constancia de Situación Fiscal (SAT)'],
-        ['cd-dom', 'Comprobante de domicilio reciente'],
-        ['cd-estado-cuenta', 'Carátula de estado de cuenta bancario']
-      ]
+      ['cd-ine', 'Identificación oficial (INE / Pasaporte)'],
+      ['cd-curp', 'Constancia de CURP'],
+      ['cd-rfc', 'Constancia de Situación Fiscal (SAT)'],
+      ['cd-dom', 'Comprobante de domicilio reciente'],
+      ['cd-estado-cuenta', 'Carátula de estado de cuenta bancario']
+    ]
     : [
-        ['d-ine', 'Identificación oficial del representante'],
-        ['d-curp', 'Constancia de CURP'],
-        ['d-situacion', 'Constancia de situación fiscal'],
-        ['d-dom', 'Comprobante de domicilio fiscal'],
-        ['d-estado-cuenta', 'Carátula de estado de cuenta'],
-        ['dm-acta', 'Acta constitutiva de la empresa'],
-        ['dm-estatutos', 'Estatutos sociales vigentes'],
-        ['dm-ine-rep', 'INE / IFE del apoderado'],
-        ['v-rep-poder', 'Poder notarial del representante'],
-        ['v-aut-file', 'Carta de autorización para ofertar']
-      ];
+      ['d-ine', 'Identificación oficial del representante'],
+      ['d-curp', 'Constancia de CURP'],
+      ['d-situacion', 'Constancia de situación fiscal'],
+      ['d-dom', 'Comprobante de domicilio fiscal'],
+      ['d-estado-cuenta', 'Carátula de estado de cuenta'],
+      ['dm-acta', 'Acta constitutiva de la empresa'],
+      ['dm-estatutos', 'Estatutos sociales vigentes'],
+      ['dm-ine-rep', 'INE / IFE del apoderado'],
+      ['v-rep-poder', 'Poder notarial del representante'],
+      ['v-aut-file', 'Carta de autorización para ofertar']
+    ];
 
   container.innerHTML = docs.map(([name, label]) => `
     <label class="document-field">
@@ -364,6 +367,8 @@ export async function loadRequests({ quiet = false } = {}) {
 
 export function paintRequests() {
   const filtered = filterRequests(state.requests, $('#searchRequests')?.value || '');
+  const paged = paginateRequests(filtered, state.currentPage, state.pageSize);
+  state.currentPage = paged.page;
   const tableEl = $('#requestsTable');
   if (tableEl) {
     if (filtered.length === 0) {
@@ -374,7 +379,7 @@ export function paintRequests() {
         </div>
       `;
     } else {
-      tableEl.innerHTML = renderRequestsTable(filtered);
+      tableEl.innerHTML = renderRequestsTable(paged.items, paged);
     }
   }
   const countEl = $('#requestCount');
@@ -399,6 +404,27 @@ export async function openRequestDetail(type, id) {
   }
 }
 
+export function formatDateDDMMAAAA(value) {
+  if (!value) return '—';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+      return trimmed;
+    }
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      const [, y, m, d] = isoMatch;
+      return `${d}/${m}/${y}`;
+    }
+  }
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return String(value);
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 export function renderDetail(detail, type, id, doc = document) {
   const profile = detail.datos || detail.perfil || detail;
   const name = detail.nombre || profile.razonSocial || [profile.nombres, profile.apellidoPaterno, profile.apellidoMaterno].filter(Boolean).join(' ') || 'Perfil sin nombre';
@@ -407,9 +433,16 @@ export function renderDetail(detail, type, id, doc = document) {
     ['Tipo de persona', profile.tipoPersona], ['CURP', profile.curp], ['Folio', detail.folio],
     ['Estado', profile.estado], ['Ciudad', profile.ciudad], ['C.P.', profile.codigoPostal],
     ['Colonia', profile.colonia], ['Calle', profile.calle],
-    ['Fecha de registro', detail.fechaCreacion ? new Date(detail.fechaCreacion).toLocaleDateString('es-MX') : '—'],
+    ['Fecha de registro', detail.fechaCreacion ? formatDateDDMMAAAA(detail.fechaCreacion) : '—'],
     ['Documentos registrados', detail.totalDocumentos ?? (detail.documentos || []).length]
   ];
+
+  if (profile.fechaNacimiento) {
+    entries.push(['Fecha de nacimiento', formatDateDDMMAAAA(profile.fechaNacimiento)]);
+  }
+  if (profile.fechaConstitucion) {
+    entries.push(['Fecha de constitución', formatDateDDMMAAAA(profile.fechaConstitucion)]);
+  }
 
   let docs = detail.documentos || [];
   if (docs.length === 0) {
@@ -458,7 +491,7 @@ export function renderDetail(detail, type, id, doc = document) {
         <h2 id="detailTitle">${escapeHtml(name)}<span class="lime-period">.</span></h2>
         <div class="detail-meta">${escapeHtml(detail.folio || `Solicitud #${id}`)} · ${type === 'VENDEDOR' ? 'Vendedor' : 'Comprador'}</div>
       </div>
-      <span class="status-pill status-${escapeHtml(detail.estatus || 'NO_RECIBIDO')}">${escapeHtml(({ENVIADO:'No recibido',NO_RECIBIDO:'No recibido',RECIBIDO:'Recibido',EN_REVISION:'En revisión',APROBADO:'Aprobado',NEGADO:'Negado',RECHAZADO:'Negado'})[detail.estatus] || 'No recibido')}</span>
+      <span class="status-pill status-${escapeHtml(detail.estatus || 'NO_RECIBIDO')}">${escapeHtml(({ ENVIADO: 'No recibido', NO_RECIBIDO: 'No recibido', RECIBIDO: 'Recibido', EN_REVISION: 'En revisión', APROBADO: 'Aprobado', NEGADO: 'Negado', RECHAZADO: 'Negado' })[detail.estatus] || 'No recibido')}</span>
     </div>
     <div class="detail-info-grid">${entries.map(([label, value]) => `<div class="detail-info"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value ?? '—')}</strong></div>`).join('')}</div>
     
@@ -484,6 +517,17 @@ export function renderDetail(detail, type, id, doc = document) {
         <input id="statusReason" placeholder="Motivo (opcional)" class="flex-1">
         <button class="btn btn-lime flex-shrink-0" id="saveStatus">Guardar estado <i data-lucide="check"></i></button>
       </div>
+      <div id="emailNotificationBox" class="${detail.estatus === 'EN_REVISION' ? '' : 'hidden'} mt-3 p-3 rounded-xl border border-[var(--border-card)] bg-[#101318]">
+        <div class="eyebrow dark mb-2">NOTIFICACIÓN POR CORREO (EDITABLE)</div>
+        <label class="field mb-2">
+          <span>Asunto</span>
+          <input id="emailSubject" type="text" value="${escapeHtml(detail.estatus === 'EN_REVISION' ? 'Tu solicitud está en revisión — SUBASTA' : '')}" placeholder="Asunto del correo">
+        </label>
+        <label class="field">
+          <span>Mensaje</span>
+          <textarea id="emailBody" rows="4" class="w-full rounded-lg p-2 text-xs bg-[#16191E] border border-[var(--border-card)] text-white" placeholder="Cuerpo del mensaje">${escapeHtml(detail.estatus === 'EN_REVISION' ? `Hola ${name},\n\nHemos recibido tu solicitud con folio ${detail.folio || `#${id}`} y actualmente se encuentra en revisión por nuestro equipo.\nTe notificaremos por este medio en cuanto tengamos una actualización.` : '')}</textarea>
+        </label>
+      </div>
 
       ${(ROLE_PERMISSIONS[state.user?.rol?.toUpperCase()]?.canChangeRoles && detail.usuarioId) ? `
       <div class="mt-4 pt-4 border-t border-[var(--border-card)]">
@@ -501,6 +545,23 @@ export function renderDetail(detail, type, id, doc = document) {
     </div>
   `;
   $('#saveStatus', doc)?.addEventListener('click', () => updateRequestStatus(type, id));
+  $('#newStatus', doc)?.addEventListener('change', (e) => {
+    const box = $('#emailNotificationBox', doc);
+    const subjectEl = $('#emailSubject', doc);
+    const bodyEl = $('#emailBody', doc);
+    if (!box) return;
+    if (e.target.value === 'EN_REVISION') {
+      box.classList.remove('hidden');
+      if (subjectEl && !subjectEl.value.trim()) {
+        subjectEl.value = 'Tu solicitud está en revisión — SUBASTA';
+      }
+      if (bodyEl && !bodyEl.value.trim()) {
+        bodyEl.value = `Hola ${name},\n\nHemos recibido tu solicitud con folio ${detail.folio || `#${id}`} y actualmente se encuentra en revisión por nuestro equipo.\nTe notificaremos por este medio en cuanto tengamos una actualización.`;
+      }
+    } else {
+      box.classList.add('hidden');
+    }
+  });
 
   // Bind role-change button for APROBADOR/ADMINISTRADOR
   $('#saveRolUsuario', doc)?.addEventListener('click', async () => {
@@ -681,6 +742,10 @@ export function handleRoute(route = (typeof window !== 'undefined' ? window.loca
     btn.classList.toggle('active', bView === targetView || bRoute === raw || (targetView === 'overview' && (bRoute === '/' || bView === 'overview')));
   });
 
+  if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+    window.scrollTo(0, 0);
+  }
+
   return targetView;
 }
 
@@ -756,7 +821,7 @@ export function logout(doc = document) {
       localStorage.removeItem('subasta_user');
       localStorage.removeItem('subasta_token');
     }
-  } catch (ignored) {}
+  } catch (ignored) { }
   closeUserProfile(doc);
   toast('Sesión cerrada correctamente.');
   updateUserAvatar(doc);
@@ -820,7 +885,7 @@ export async function submitLogin(event) {
             localStorage.setItem('subasta_token', res.accessToken);
             localStorage.setItem('subasta_user', JSON.stringify(state.user));
           }
-        } catch (ignored) {}
+        } catch (ignored) { }
 
         toast(`¡Bienvenido de vuelta, ${state.user.nombre || state.user.email}!`);
         updateUserAvatar();
@@ -861,6 +926,13 @@ export async function submitLogin(event) {
 
       const res = await authApi.verifyCode(code, state.loginChallengeToken);
       if (res?.verified) {
+        if (res.pendingApproval) {
+          toast('Tus datos están en validación. Tu cuenta aún no ha sido aprobada por un administrador.', 'error');
+          return;
+        }
+        if (res.accessToken) {
+          state.token = res.accessToken;
+        }
         const found = state.requests.find(r => r.email === identifier || (r.datos && r.datos.email === identifier));
         state.user = res.user || {
           nombre: found?.nombre || found?.datos?.nombres || identifier.split('@')[0],
@@ -872,9 +944,10 @@ export async function submitLogin(event) {
 
         try {
           if (typeof localStorage !== 'undefined') {
+            if (res.accessToken) localStorage.setItem('subasta_token', res.accessToken);
             localStorage.setItem('subasta_user', JSON.stringify(state.user));
           }
-        } catch (ignored) {}
+        } catch (ignored) { }
 
         toast(`¡Bienvenido de vuelta, ${state.user.nombre}!`);
         updateUserAvatar();
@@ -1008,8 +1081,10 @@ export async function forgotStep3Submit(event) {
   const password = pw1?.value || '';
   const confirm = pw2?.value || '';
 
-  if (password.length < 8) {
-    toast('La contraseña debe tener al menos 8 caracteres.', 'error');
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+=\-[\]{}|;:,.<>])[A-Za-z\d@$!%*?&#^()_+=\-[\]{}|;:,.<>]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    toast('La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y carácter especial.', 'error');
+    if (pw1) pw1.focus();
     return;
   }
   if (password !== confirm) {
@@ -1093,10 +1168,12 @@ export function toggleNavDrawer(doc = document) {
 export async function updateRequestStatus(type, id) {
   const status = $('#newStatus')?.value;
   const reason = $('#statusReason')?.value.trim();
+  const asunto = $('#emailSubject')?.value.trim() || '';
+  const mensaje = $('#emailBody')?.value.trim() || '';
   const button = $('#saveStatus');
   if (button) setLoading(button, true, 'Guardando...');
   try {
-    await revisionApi.updateStatus(type, id, status, reason);
+    await revisionApi.updateStatus(type, id, status, reason, asunto, mensaje);
     toast('El estado de la solicitud se actualizó correctamente.');
     hideModal('detailModal');
     await Promise.all([loadDashboard({ quiet: true }), loadRequests({ quiet: true })]);
@@ -1107,8 +1184,128 @@ export async function updateRequestStatus(type, id) {
   }
 }
 
+export function extractBirthDateFromCurpOrRfc(value) {
+  if (!value) return null;
+  const clean = String(value).trim().toUpperCase();
+  const isCurp = /^[A-Z]{4}\d{6}[HM][A-Z]{5}[0-9A-Z]\d$/.test(clean);
+  const isRfcFisica = /^[A-ZÑ&]{4}\d{6}[A-Z0-9]{3}$/.test(clean);
+  if (!isCurp && !isRfcFisica) return null;
+
+  const yy = parseInt(clean.slice(4, 6), 10);
+  const mm = parseInt(clean.slice(6, 8), 10);
+  const dd = parseInt(clean.slice(8, 10), 10);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+
+  let year;
+  if (isCurp) {
+    const centuryChar = clean.charAt(16);
+    year = /\d/.test(centuryChar) ? 1900 + yy : 2000 + yy;
+  } else {
+    const currentTwoDigits = new Date().getFullYear() % 100;
+    year = yy > currentTwoDigits ? 1900 + yy : 2000 + yy;
+  }
+
+  const testDate = new Date(year, mm - 1, dd);
+  if (testDate.getFullYear() !== year || testDate.getMonth() !== mm - 1 || testDate.getDate() !== dd) {
+    return null;
+  }
+  return `${String(dd).padStart(2, '0')}/${String(mm).padStart(2, '0')}/${year}`;
+}
+
+export function isValidDateInput(value) {
+  if (!value) return true;
+  const trimmed = String(value).trim();
+  let dd, mm, yyyy;
+  const ddmmyyyy = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const yyyymmdd = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (ddmmyyyy) {
+    dd = parseInt(ddmmyyyy[1], 10);
+    mm = parseInt(ddmmyyyy[2], 10);
+    yyyy = parseInt(ddmmyyyy[3], 10);
+  } else if (yyyymmdd) {
+    yyyy = parseInt(yyyymmdd[1], 10);
+    mm = parseInt(yyyymmdd[2], 10);
+    dd = parseInt(yyyymmdd[3], 10);
+  } else {
+    return false;
+  }
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31 || yyyy < 1900 || yyyy > new Date().getFullYear() + 1) {
+    return false;
+  }
+  const d = new Date(yyyy, mm - 1, dd);
+  return d.getFullYear() === yyyy && d.getMonth() === mm - 1 && d.getDate() === dd;
+}
+
+export function updateOnboardingLockState(doc = document) {
+  const form = $('#onboardingForm', doc);
+  const emailInput = $('#onboardingEmail', doc);
+  const verifyBtn = $('#verifyOnboardingEmailBtn', doc);
+  if (!form || !emailInput) return;
+
+  const currentEmail = emailInput.value.trim().toLowerCase();
+  const isVerified = Boolean(state.verifiedEmail && state.verifiedEmail === currentEmail);
+  const estadoSelect = $('#estadoSelect', doc);
+  const ciudadSelect = $('#ciudadSelect', doc);
+
+  form.querySelectorAll('input, select, textarea, button').forEach(el => {
+    if (el === emailInput || el === verifyBtn) {
+      el.disabled = false;
+      return;
+    }
+    if (!isVerified) {
+      el.disabled = true;
+    } else {
+      if (el === ciudadSelect) {
+        el.disabled = !estadoSelect?.value;
+      } else if (el.id === 'codigoPostalInput') {
+        el.disabled = !estadoSelect?.value || !ciudadSelect?.value;
+      } else if (el.id === 'coloniaInput') {
+        el.disabled = !estadoSelect?.value || !ciudadSelect?.value;
+      } else if (el.id === 'calleInput') {
+        el.disabled = !estadoSelect?.value || !ciudadSelect?.value;
+      } else {
+        el.disabled = false;
+      }
+    }
+  });
+}
+
+export async function triggerOnboardingEmailVerification(doc = document) {
+  const emailInput = $('#onboardingEmail', doc);
+  const verifyBtn = $('#verifyOnboardingEmailBtn', doc);
+  const email = emailInput?.value.trim().toLowerCase() || '';
+  if (!email || !emailInput?.checkValidity()) {
+    toast('Ingresa un correo electrónico válido primero.', 'error');
+    emailInput?.focus();
+    return;
+  }
+
+  if (verifyBtn) setLoading(verifyBtn, true, 'Enviando...');
+  try {
+    const res = await authApi.sendCode(email, { checkDuplicate: true });
+    state.preSubmitChallengeToken = res?.challengeToken || '';
+    state.pendingRegistration = null;
+
+    const emailDisplay = $('#verifyEmailDisplay', doc);
+    if (emailDisplay) emailDisplay.textContent = email;
+    const otpInput = $('#verifyOtpCode', doc);
+    if (otpInput) otpInput.value = '';
+
+    showModal('verifyModal', doc);
+    toast(res?.message || 'Código enviado. Revisa tu correo electrónico.');
+    if (otpInput) otpInput.focus();
+  } catch (error) {
+    toast(error.message || 'Error al enviar código', 'error');
+  } finally {
+    if (verifyBtn) setLoading(verifyBtn, false);
+  }
+}
+
 export function collectForm(form) {
   const data = Object.fromEntries(new FormData(form).entries());
+  if (state.verifiedEmailToken) {
+    data.verifiedEmailToken = state.verifiedEmailToken;
+  }
   const files = {};
   form.querySelectorAll('input[type="file"]').forEach(input => {
     if (input.files?.[0]) files[input.name] = input.files[0];
@@ -1125,10 +1322,23 @@ export function collectForm(form) {
     delete data.fechaNacimiento;
     delete data.curp;
   }
+  if (data.ciudad && !data.municipio) {
+    data.municipio = data.ciudad;
+  }
   return { data, files };
 }
 
 export async function executeRegistration(data, files, form) {
+  if (data.password) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+=\-[\]{}|;:,.<>])[A-Za-z\d@$!%*?&#^()_+=\-[\]{}|;:,.<>]{8,}$/;
+    if (!passwordRegex.test(data.password)) {
+      toast('La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y carácter especial.', 'error');
+      const pwdInput = form?.querySelector('[name="password"]');
+      if (pwdInput) pwdInput.focus();
+      return;
+    }
+  }
+
   const submitBtn = form.querySelector('[type="submit"]');
   if (submitBtn) setLoading(submitBtn, true, 'Guardando registro...');
   try {
@@ -1137,12 +1347,19 @@ export async function executeRegistration(data, files, form) {
       : await onboardingApi.registerSeller(data, files);
 
     toast(`${result?.mensaje || 'Usuario registrado exitosamente en el backend'}${result?.folio ? ` · Folio ${result.folio}` : ''}`);
+    const successCard = $('#registrationSuccessMessage');
+    if (successCard) successCard.classList.remove('hidden');
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo(0, 0);
+    }
     form.reset();
     state.verifiedEmail = '';
+    state.verifiedEmailToken = '';
     state.pendingRegistration = null;
     updateEmailBadge();
     setRole('COMPRADOR');
     initAddressCascade();
+    updateOnboardingLockState();
     await Promise.all([
       loadDashboard({ quiet: true }),
       loadRequests({ quiet: true })
@@ -1178,6 +1395,26 @@ export async function submitOnboarding(event) {
   const { data, files } = collectForm(form);
   const email = (data.email || '').trim().toLowerCase();
 
+  if (data.fechaNacimiento && !isValidDateInput(data.fechaNacimiento)) {
+    toast('Fecha de nacimiento inválida. Usa el formato día/mes/año (ej. 15/05/1990).', 'error');
+    form.querySelector('[name="fechaNacimiento"]')?.focus();
+    return;
+  }
+  if (data.fechaConstitucion && !isValidDateInput(data.fechaConstitucion)) {
+    toast('Fecha de constitución inválida. Usa el formato día/mes/año (ej. 15/05/1990).', 'error');
+    form.querySelector('[name="fechaConstitucion"]')?.focus();
+    return;
+  }
+
+  const password = data.password || '';
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+=\-[\]{}|;:,.<>])[A-Za-z\d@$!%*?&#^()_+=\-[\]{}|;:,.<>]{8,}$/;
+  if (password && !passwordRegex.test(password)) {
+    toast('La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y carácter especial.', 'error');
+    const pwdInput = form.querySelector('[name="password"]');
+    if (pwdInput) pwdInput.focus();
+    return;
+  }
+
   // If email is already verified, proceed directly
   if (state.verifiedEmail && state.verifiedEmail === email) {
     await executeRegistration(data, files, form);
@@ -1190,7 +1427,7 @@ export async function submitOnboarding(event) {
   if (submitBtn) setLoading(submitBtn, true, 'Enviando código...');
 
   try {
-    const res = await authApi.sendCode(email);
+    const res = await authApi.sendCode(email, { checkDuplicate: true });
     state.preSubmitChallengeToken = res?.challengeToken || '';
     state.pendingRegistration = { data, files, form };
 
@@ -1229,14 +1466,19 @@ export async function submitVerifyModal(event) {
       throw new Error('Código incorrecto o expirado.');
     }
 
-    const verifiedEmail = (result.email || state.pendingRegistration?.data?.email || '').trim().toLowerCase();
+    const verifiedEmail = (result.email || state.pendingRegistration?.data?.email || $('#onboardingEmail')?.value || '').trim().toLowerCase();
     state.verifiedEmail = verifiedEmail;
+    if (result.verifiedEmailToken) {
+      state.verifiedEmailToken = result.verifiedEmailToken;
+    }
     updateEmailBadge();
+    updateOnboardingLockState();
     hideModal('verifyModal');
-    toast('¡Código verificado con éxito! Registrando usuario...');
+    toast('¡Código verificado con éxito! Ya puedes completar tu registro.');
 
     if (state.pendingRegistration) {
       const { data, files, form } = state.pendingRegistration;
+      if (state.verifiedEmailToken) data.verifiedEmailToken = state.verifiedEmailToken;
       await executeRegistration(data, files, form);
     }
   } catch (error) {
@@ -1255,7 +1497,7 @@ export async function resendPreSubmitCode() {
   const btn = $('#resendVerifyCodeBtn');
   if (btn) setLoading(btn, true, 'Reenviando...');
   try {
-    const res = await authApi.sendCode(email);
+    const res = await authApi.sendCode(email, { checkDuplicate: true });
     state.preSubmitChallengeToken = res?.challengeToken || state.preSubmitChallengeToken;
     toast(res?.message || 'Nuevo código enviado.');
   } catch (error) {
@@ -1314,21 +1556,59 @@ export function bindEvents() {
     const current = $('#onboardingEmail').value.trim().toLowerCase();
     if (state.verifiedEmail && state.verifiedEmail !== current) {
       state.verifiedEmail = '';
+      state.verifiedEmailToken = '';
       updateEmailBadge();
     }
+    updateOnboardingLockState();
   });
+
+  $('#verifyOnboardingEmailBtn')?.addEventListener('click', () => triggerOnboardingEmailVerification());
+
+  const handleCurpOrRfcInput = (e) => {
+    if ($('#tipoPersona')?.value !== 'FISICA') return;
+    const birthDate = extractBirthDateFromCurpOrRfc(e.target.value);
+    const birthInput = $('#onboardingForm [name="fechaNacimiento"]');
+    if (birthDate && birthInput) {
+      birthInput.value = birthDate;
+    }
+  };
+  $('#onboardingForm [name="curp"]')?.addEventListener('input', handleCurpOrRfcInput);
+  $('#onboardingForm [name="rfc"]')?.addEventListener('input', handleCurpOrRfcInput);
+
+  const attachDateMask = (input) => {
+    input?.addEventListener('input', (e) => {
+      const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+      let formatted = digits;
+      if (digits.length > 4) {
+        formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+      } else if (digits.length > 2) {
+        formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+      }
+      if (e.target.value !== formatted) {
+        e.target.value = formatted;
+      }
+    });
+  };
+  attachDateMask($('#onboardingForm [name="fechaNacimiento"]'));
+  attachDateMask($('#onboardingForm [name="fechaConstitucion"]'));
 
   // Pre-submission verification modal events
   $('#verifyForm')?.addEventListener('submit', submitVerifyModal);
   $('#resendVerifyCodeBtn')?.addEventListener('click', resendPreSubmitCode);
   $('#closeVerify')?.addEventListener('click', () => hideModal('verifyModal'));
 
-  $('#searchRequests')?.addEventListener('input', paintRequests);
-  $('#typeFilter')?.addEventListener('change', () => loadRequests());
-  $('#statusFilter')?.addEventListener('change', () => loadRequests());
+  $('#searchRequests')?.addEventListener('input', () => { state.currentPage = 1; paintRequests(); });
+  $('#typeFilter')?.addEventListener('change', () => { state.currentPage = 1; loadRequests(); });
+  $('#statusFilter')?.addEventListener('change', () => { state.currentPage = 1; loadRequests(); });
   $('#refreshRequests')?.addEventListener('click', () => loadRequests());
 
   $('#requestsTable')?.addEventListener('click', event => {
+    const pageBtn = event.target.closest('[data-page]');
+    if (pageBtn && !pageBtn.disabled) {
+      state.currentPage = Number(pageBtn.dataset.page) || 1;
+      paintRequests();
+      return;
+    }
     const button = event.target.closest('[data-detail-id]');
     if (button) openRequestDetail(button.dataset.detailType, button.dataset.detailId);
   });
@@ -1430,12 +1710,13 @@ export async function init() {
         state.user = null;
       }
     }
-  } catch (ignored) {}
+  } catch (ignored) { }
 
   bindEvents();
   setRole('COMPRADOR');
   setupPersonFieldToggles();
   initAddressCascade();
+  updateOnboardingLockState();
   updateUserAvatar();
   initIcons();
   handleRoute();

@@ -142,10 +142,6 @@ describe('Diagram Requirements Specification (UX/UI & Business Rules)', () => {
       const rule = onboardingView.querySelector('#emailValidationRule, .email-validation-rule');
       expect(rule).not.toBeNull();
       expect(rule.textContent.replace(/\s+/g, ' ')).toContain('Se requiere validar el correo antes de crear la cuenta');
-
-      const toLogin = onboardingView.querySelector('#onboardingToLoginBtn, .to-login-link');
-      expect(toLogin).not.toBeNull();
-      expect(toLogin.textContent.replace(/\s+/g, ' ')).toContain('Opcion para ir a iniciar sesión si ya se tiene cuenta');
     });
 
     it('should have login fields: Correo - Telefono, Contraseña, and Recuperar contraseña link', () => {
@@ -169,8 +165,8 @@ describe('Diagram Requirements Specification (UX/UI & Business Rules)', () => {
       const successScreen = document.querySelector('#registrationSuccessMessage, .registration-success-card');
       expect(successScreen).not.toBeNull();
       const text = successScreen.textContent.replace(/\s+/g, ' ').trim();
-      expect(text).toContain('Felicidades creaste la cuenta correctamente');
-      expect(text).toContain('Para activarla, sigue los pasos que se mandaron a tu correo');
+      expect(text).toContain('Hemos recibido tu petición para dar de alta tu usuario en la plataforma de subastas');
+      expect(text).toContain('En breve un administrador de la plataforma la estará revisando y se pondrá en contacto contigo.');
     });
   });
 

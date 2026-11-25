@@ -57,28 +57,27 @@ class PasswordRecoverySecurityTests {
     }
 
     @Test
-    @DisplayName("Password Recovery: Solicitud con usuario registrado vs no registrado (Anti-Enumeración)")
-    void testForgotPasswordAntiEnumeration() throws Exception {
+    @DisplayName("Password Recovery: Solicitud con usuario registrado vs no registrado")
+    void testForgotPasswordValidatesRegisteredUser() throws Exception {
         Usuario user = new Usuario(null, "registrado@subasta.mx", passwordEncoder.encode("Password123!"), "COMPRADOR", true, LocalDateTime.now());
+        user.setEstatus("APROBADO");
         usuarioRepository.save(user);
 
-        // Caso 1: Usuario registrado
+        // Caso 1: Usuario registrado y aprobado
         mockMvc.perform(post("/api/v1/auth/forgot-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new SendCodeRequest("registrado@subasta.mx"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.challengeToken").isNotEmpty())
-                .andExpect(jsonPath("$.message").value("Si tu correo se encuentra registrado, recibirás un código de verificación en breve."));
+                .andExpect(jsonPath("$.challengeToken").isNotEmpty());
 
-        // Caso 2: Usuario NO registrado (misma respuesta exterior)
+        // Caso 2: Usuario NO registrado -> rechazado (404)
         mockMvc.perform(post("/api/v1/auth/forgot-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new SendCodeRequest("noexiste@subasta.mx"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.challengeToken").isNotEmpty())
-                .andExpect(jsonPath("$.message").value("Si tu correo se encuentra registrado, recibirás un código de verificación en breve."));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.challengeToken").doesNotExist());
     }
 
     @Test

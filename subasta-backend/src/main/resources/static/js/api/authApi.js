@@ -7,8 +7,8 @@ export const authApi = {
       body: JSON.stringify({ identifier, password })
     });
   },
-  sendCode(email) {
-    return request('/auth/send-code', { method: 'POST', body: JSON.stringify({ email }) });
+  sendCode(email, options = {}) {
+    return request('/auth/send-code', { method: 'POST', body: JSON.stringify({ email, ...options }) });
   },
   verifyCode(code, challengeToken) {
     return request('/auth/verify-code', { method: 'POST', body: JSON.stringify({ code, challengeToken }) });

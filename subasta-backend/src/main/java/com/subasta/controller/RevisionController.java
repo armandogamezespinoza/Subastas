@@ -6,6 +6,7 @@ import com.subasta.entity.Vendedor;
 import com.subasta.repository.CompradorRepository;
 import com.subasta.repository.DocumentoRepository;
 import com.subasta.repository.VendedorRepository;
+import com.subasta.service.EmailService;
 import com.subasta.service.FileStorageService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
@@ -35,17 +36,20 @@ public class RevisionController {
     private final DocumentoRepository documentoRepository;
     private final FileStorageService fileStorageService;
     private final com.subasta.repository.UsuarioRepository usuarioRepository;
+    private final EmailService emailService;
 
     public RevisionController(CompradorRepository compradorRepository,
                               VendedorRepository vendedorRepository,
                               DocumentoRepository documentoRepository,
                               FileStorageService fileStorageService,
-                              com.subasta.repository.UsuarioRepository usuarioRepository) {
+                              com.subasta.repository.UsuarioRepository usuarioRepository,
+                              EmailService emailService) {
         this.compradorRepository = compradorRepository;
         this.vendedorRepository = vendedorRepository;
         this.documentoRepository = documentoRepository;
         this.fileStorageService = fileStorageService;
         this.usuarioRepository = usuarioRepository;
+        this.emailService = emailService;
     }
 
     @GetMapping("/kpis")
@@ -226,11 +230,12 @@ public class RevisionController {
     public ResponseEntity<?> updateEstatus(@PathVariable("tipo") String tipo,
                                           @PathVariable("id") Long id,
                                           @RequestBody Map<String, String> body) {
-        String nuevoEstatus = body.get("estatus");
-        if (nuevoEstatus == null || nuevoEstatus.isBlank()) {
+        String rawEstatus = body.get("estatus");
+        if (rawEstatus == null || rawEstatus.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El campo estatus es obligatorio"));
         }
 
+        String nuevoEstatus = rawEstatus.trim().toUpperCase();
         String normalizedTipo = tipo.toUpperCase();
         if ("COMPRADOR".equals(normalizedTipo)) {
             Optional<Comprador> compradorOpt = compradorRepository.findById(id);
@@ -241,15 +246,9 @@ public class RevisionController {
             c.setEstatus(nuevoEstatus);
             compradorRepository.save(c);
 
-            // Regla de negocio: Al cambiar a 'RECIBIDO' o 'APROBADO', se activa la cuenta del usuario
-            if (c.getUsuarioId() != null) {
-                usuarioRepository.findById(c.getUsuarioId()).ifPresent(u -> {
-                    if ("RECIBIDO".equalsIgnoreCase(nuevoEstatus) || "APROBADO".equalsIgnoreCase(nuevoEstatus)) {
-                        u.setActivo(true);
-                        usuarioRepository.save(u);
-                    }
-                });
-            }
+            syncUsuarioStatus(c.getUsuarioId(), nuevoEstatus);
+            String nombre = resolveNombreSolicitante(c.getNombres(), c.getRazonSocial());
+            dispatchStatusNotification(c.getEmail(), nombre, c.getFolio(), nuevoEstatus, body);
 
             return ResponseEntity.ok(Map.of("success", true, "estatus", nuevoEstatus, "mensaje", "Estado de comprador actualizado correctamente"));
         } else if ("VENDEDOR".equals(normalizedTipo)) {
@@ -261,19 +260,64 @@ public class RevisionController {
             v.setEstatus(nuevoEstatus);
             vendedorRepository.save(v);
 
-            // Regla de negocio: Al cambiar a 'RECIBIDO' o 'APROBADO', se activa la cuenta del usuario
-            if (v.getUsuarioId() != null) {
-                usuarioRepository.findById(v.getUsuarioId()).ifPresent(u -> {
-                    if ("RECIBIDO".equalsIgnoreCase(nuevoEstatus) || "APROBADO".equalsIgnoreCase(nuevoEstatus)) {
-                        u.setActivo(true);
-                        usuarioRepository.save(u);
-                    }
-                });
-            }
+            syncUsuarioStatus(v.getUsuarioId(), nuevoEstatus);
+            String nombre = resolveNombreSolicitante(v.getNombres(), v.getRazonSocial());
+            dispatchStatusNotification(v.getEmail(), nombre, v.getFolio(), nuevoEstatus, body);
 
             return ResponseEntity.ok(Map.of("success", true, "estatus", nuevoEstatus, "mensaje", "Estado de vendedor actualizado correctamente"));
         } else {
             return ResponseEntity.badRequest().body(Map.of("error", "Tipo no válido"));
+        }
+    }
+
+    private void syncUsuarioStatus(Long usuarioId, String nuevoEstatus) {
+        if (usuarioId == null) {
+            return;
+        }
+        usuarioRepository.findById(usuarioId).ifPresent(u -> {
+            u.setEstatus(nuevoEstatus);
+            if ("RECIBIDO".equalsIgnoreCase(nuevoEstatus) || "APROBADO".equalsIgnoreCase(nuevoEstatus)) {
+                u.setActivo(true);
+            } else if ("NEGADO".equalsIgnoreCase(nuevoEstatus) || "RECHAZADO".equalsIgnoreCase(nuevoEstatus)) {
+                u.setActivo(false);
+            }
+            usuarioRepository.save(u);
+        });
+    }
+
+    private String resolveNombreSolicitante(String nombres, String razonSocial) {
+        if (nombres != null && !nombres.isBlank()) {
+            return nombres.trim();
+        }
+        if (razonSocial != null && !razonSocial.isBlank()) {
+            return razonSocial.trim();
+        }
+        return "Usuario";
+    }
+
+    private void dispatchStatusNotification(String email, String nombre, String folio, String nuevoEstatus, Map<String, String> body) {
+        if (email == null || email.isBlank()) {
+            return;
+        }
+        String customMessage = body.get("mensaje");
+        String customSubject = body.get("asunto");
+
+        if ("APROBADO".equalsIgnoreCase(nuevoEstatus)) {
+            String subject = (customSubject != null && !customSubject.isBlank())
+                    ? customSubject
+                    : "Solicitud aprobada — SUBASTA";
+            String message = (customMessage != null && !customMessage.isBlank())
+                    ? customMessage
+                    : "Felicidades, " + nombre + ".\n\n"
+                      + "Tu petición con folio " + folio + " ha sido aprobada por el administrador de la plataforma.\n"
+                      + "Ya puedes iniciar sesión con tu cuenta.\n\n"
+                      + "Te esperamos.";
+            emailService.sendCustomEmail(email, subject, message);
+        } else if (customMessage != null && !customMessage.isBlank()) {
+            String subject = (customSubject != null && !customSubject.isBlank())
+                    ? customSubject
+                    : "Actualización de tu solicitud — SUBASTA";
+            emailService.sendCustomEmail(email, subject, customMessage);
         }
     }
 

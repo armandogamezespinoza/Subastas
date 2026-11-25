@@ -94,6 +94,7 @@ export const CODIGOS_POSTALES_DATA = [
   // Sinaloa - Culiacán
   { estado: 'Sinaloa', municipio: 'Culiacán', codigoPostal: '80000', colonias: ['Centro', 'Primer Cuadro', 'Almada'], calles: ['Álvaro Obregón', 'Antonio Rosales', 'Ángel Flores', 'Ignacio Zaragoza', 'Ruperto L. Paliza', 'Francisco I. Madero'] },
   { estado: 'Sinaloa', municipio: 'Culiacán', codigoPostal: '80020', colonias: ['Gabriel Leyva', 'Industrial Bravo', 'Miguel Alemán'], calles: ['Calzada Heroico Colegio Militar', 'Río Culiacán', 'Juan José Ríos', 'Nicolás Bravo'] },
+  { estado: 'Sinaloa', municipio: 'Culiacán', codigoPostal: '80028', colonias: ['Agustina Ramírez', 'Balcones del Humaya', 'Campestre Las Fuentes', 'Campestre San Jorge', 'Campestre Tres Ríos', 'Colinas del Humaya II', 'La Cascada', 'La Puerta', 'Lomas Verdes', 'Los Sauces', 'Portafé', 'Portanova', 'Privada La Rinconada', 'Rincón Real', 'Santa Elena', 'Tulipanes', 'Villa Fontana', 'Villas de Culiacán'], calles: ['Boulevard José Limón', 'Boulevard Enrique Félix Castro', 'Boulevard Lola Beltrán', 'Avenida Villas de Culiacán'] },
   { estado: 'Sinaloa', municipio: 'Culiacán', codigoPostal: '80040', colonias: ['Las Quintas', 'La Campiña', 'Isla Musala'], calles: ['Boulevard Sinaloa', 'Boulevard El Dorado', 'Dr. Mora', 'Isla del Carmen', 'Presa Valsequillo'] },
   { estado: 'Sinaloa', municipio: 'Culiacán', codigoPostal: '80100', colonias: ['Guadalupe', 'Lomas del Boulevard', 'Montebello'], calles: ['Río Mocorito', 'Río Humaya', 'Avenida Álvaro Obregón Sur', 'Cerro del Hombre'] },
   { estado: 'Sinaloa', municipio: 'Culiacán', codigoPostal: '80120', colonias: ['Infonavit Humaya', 'Vicente Lombardo Toledano', 'Fovissste Humaya'], calles: ['Boulevard Félix Castro', 'Boulevard Enrique Cabrera', 'Obrero Mundial'] },
@@ -181,6 +182,12 @@ export function getCodigosPostales(estado, municipio, query = '') {
     codigoPostal: item.codigoPostal,
     colonias: item.colonias
   }));
+}
+
+export function lookupByCodigoPostal(cp) {
+  if (!cp) return null;
+  const cleanCp = String(cp).trim();
+  return CODIGOS_POSTALES_DATA.find(item => item.codigoPostal === cleanCp) || null;
 }
 
 export function getColonias(estado, municipio, codigoPostal = '', query = '') {
@@ -341,9 +348,23 @@ export function initAddressCascade(doc = (typeof document !== 'undefined' ? docu
   // 4. Cascade Colonias
   function handleCpInput() {
     updateCpSuggestions();
-    const estado = estadoSelect.value;
-    const ciudad = ciudadSelect.value;
     const cp = cpInput ? cpInput.value.trim() : '';
+
+    if (cp.length === 5) {
+      const match = lookupByCodigoPostal(cp);
+      if (match) {
+        if (!estadoSelect.value) {
+          estadoSelect.value = match.estado;
+          const municipios = getMunicipios(match.estado);
+          ciudadSelect.innerHTML = '<option value="">Selecciona un municipio...</option>' +
+            municipios.map(m => `<option value="${m}">${m}</option>`).join('');
+          ciudadSelect.disabled = false;
+        }
+        if (!ciudadSelect.value) {
+          ciudadSelect.value = match.municipio;
+        }
+      }
+    }
 
     if (colInput) {
       colInput.disabled = false;
@@ -357,7 +378,14 @@ export function initAddressCascade(doc = (typeof document !== 'undefined' ? docu
     const ciudad = ciudadSelect.value;
     const cp = cpInput ? cpInput.value.trim() : '';
     const query = colInput.value.trim();
-    const colonias = getColonias(estado, ciudad, cp, query);
+    let colonias = getColonias(estado, ciudad, cp, query);
+    if (colonias.length === 0 && cp.length === 5) {
+      const match = lookupByCodigoPostal(cp);
+      if (match) {
+        const normQuery = normalizeStr(query);
+        colonias = match.colonias.filter(c => !normQuery || normalizeStr(c).includes(normQuery));
+      }
+    }
     colList.innerHTML = colonias.map(col => `<option value="${col}">${col}</option>`).join('');
   }
 
