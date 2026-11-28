@@ -137,8 +137,19 @@ public class AuthController {
         loginAttemptService.clearAttempts(identifier);
 
         if (!isUserApproved(u)) {
+            String estatus = resolveUserRequestStatus(u);
+            if (isRejectedStatus(estatus)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "success", false,
+                        "rejected", true,
+                        "estatus", estatus,
+                        "error", "Tu solicitud fue rechazada. Este correo no fue aprobado."
+                ));
+            }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                     "success", false,
+                    "rejected", false,
+                    "estatus", estatus,
                     "error", "Tus datos están en validación. Tu cuenta aún no ha sido aprobada por un administrador."
             ));
         }
@@ -263,7 +274,10 @@ public class AuthController {
                     String accessToken = jwtService.createAccessToken(email, u.getRol());
                     response.put("accessToken", accessToken);
                 } else {
+                    String estatus = resolveUserRequestStatus(u);
                     response.put("pendingApproval", true);
+                    response.put("rejected", isRejectedStatus(estatus));
+                    response.put("estatus", estatus);
                 }
 
                 Map<String, Object> userData = new HashMap<>();
@@ -343,6 +357,25 @@ public class AuthController {
                 "message", "Código de verificación enviado a tu correo electrónico.",
                 "challengeToken", challengeToken
         ));
+    }
+
+    private String resolveUserRequestStatus(Usuario u) {
+        String rol = u.getRol();
+        if ("COMPRADOR".equalsIgnoreCase(rol)) {
+            return compradorRepository.findByEmail(u.getEmail())
+                    .map(c -> c.getEstatus() != null ? c.getEstatus() : "ENVIADO")
+                    .orElse(u.getEstatus() != null ? u.getEstatus() : "ENVIADO");
+        }
+        if ("VENDEDOR".equalsIgnoreCase(rol)) {
+            return vendedorRepository.findByEmail(u.getEmail())
+                    .map(v -> v.getEstatus() != null ? v.getEstatus() : "ENVIADO")
+                    .orElse(u.getEstatus() != null ? u.getEstatus() : "ENVIADO");
+        }
+        return u.getEstatus() != null ? u.getEstatus() : "ENVIADO";
+    }
+
+    private boolean isRejectedStatus(String estatus) {
+        return "RECHAZADO".equalsIgnoreCase(estatus) || "NEGADO".equalsIgnoreCase(estatus);
     }
 
     private boolean isUserApproved(Usuario u) {

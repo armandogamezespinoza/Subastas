@@ -84,6 +84,9 @@ public class Comprador {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion = LocalDateTime.now();
+
     public Comprador() {}
 
 
@@ -161,5 +164,8 @@ public class Comprador {
 
     public String getEstatus() { return estatus; }
     public void setEstatus(String estatus) { this.estatus = estatus; }
+
+    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 }
 

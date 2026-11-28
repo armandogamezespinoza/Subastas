@@ -23,6 +23,11 @@
   --duration-normal: 260ms;
 
   /* Mapeo de tokens heredados */
+  --surface-editorial: #F6F7F5;
+  --text-primary: #141715;
+  --accent-forest: #3B523E;
+  --border-subtle: rgba(20,23,21,0.12);
+  --pill-radius: 9999px;
   --ink: #F8FAFC;
   --muted: #94A3B8;
   --line: #1E2638;
@@ -198,6 +203,86 @@ button {
 }
 
 .drawer-close-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Utility: Pill buttons */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--pill-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-smooth), color var(--duration-fast) var(--ease-smooth);
+}
+.pill--solid {
+  background: var(--accent-forest);
+  color: #fff;
+  border: 1px solid transparent;
+}
+.pill--solid:hover {
+  background: shade(var(--accent-forest), 10%);
+}
+.pill--outline {
+  background: transparent;
+  color: var(--accent-forest);
+  border: 1px solid var(--accent-forest);
+}
+.pill--outline:hover {
+  background: var(--accent-forest);
+  color: #fff;
+}
+
+/* Utility: capsule select */
+.capsule-select {
+  appearance: none;
+  padding: 0.4rem 1.2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--pill-radius);
+  background: var(--surface-editorial);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+.capsule-select:focus {
+  outline: 2px solid var(--accent-forest);
+}
+
+/* Error message styling */
+.error-msg {
+  color: var(--cta-urgent);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Login rejection alert */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-subtle);
+}
+.alert--error {
+  background: var(--accent-forest);
+  color: #fff;
+}
+
+.capsule-select {
+  appearance: none;
+  padding: 0.4rem 1.2rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--pill-radius);
+  background: var(--surface-editorial);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+.capsule-select:focus {
+  outline: 2px solid var(--accent-forest);
+}
+
   width: 17px;
   height: 17px;
 }

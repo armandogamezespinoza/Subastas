@@ -52,6 +52,8 @@ services:
       BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-}
       BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-SUBASTA}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      SUBASTA_BANK_ACCOUNT: ${SUBASTA_BANK_ACCOUNT:-}
+      SUBASTA_SUPPORT_PHONE: ${SUBASTA_SUPPORT_PHONE:-}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
     volumes:
       - backend_uploads:/app/uploads

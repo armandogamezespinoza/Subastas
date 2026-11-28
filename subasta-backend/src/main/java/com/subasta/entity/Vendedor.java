@@ -111,6 +111,9 @@ public class Vendedor {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion = LocalDateTime.now();
+
     public Vendedor() {}
 
     public Long getId() { return id; }
@@ -214,4 +217,7 @@ public class Vendedor {
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
+    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 }
