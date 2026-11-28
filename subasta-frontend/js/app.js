@@ -871,6 +871,137 @@ export async function submitLogin(event) {
 
   try {
     if (password) {
+      try {
+        const res = await authApi.login(identifier, password);
+        if (res?.success && res?.accessToken) {
+          // success flow unchanged
+          state.token = res.accessToken;
+          const claims = parseJwtPayload(res.accessToken);
+          const resolvedRole = normalizeRole(res.user?.rol || claims?.rol);
+          state.user = {
+            ...res.user,
+            rol: resolvedRole
+          };
+          try {
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('subasta_token', res.accessToken);
+              localStorage.setItem('subasta_user', JSON.stringify(state.user));
+            }
+          } catch (ignored) {}
+          toast(`¡Bienvenido de vuelta, ${state.user.nombre || state.user.email}!`);
+          updateUserAvatar();
+          const perms = ROLE_PERMISSIONS[resolvedRole];
+          if (perms?.canAccessSolicitudes) {
+            navigate('solicitudes');
+            await Promise.all([loadDashboard({ quiet: true }), loadRequests({ quiet: true })]);
+          } else {
+            navigate('overview');
+            await loadDashboard({ quiet: true });
+          }
+        } else {
+          toast(res?.error || 'Error al iniciar sesión', 'error');
+          return;
+        }
+      } catch (e) {
+        // Handle rejected email case from backend
+        if (e instanceof ApiError && e.status === 403 && e.payload?.rejected) {
+          const loginView = $('#loginView');
+          if (loginView) {
+            // Remove existing alert if any
+            const existing = loginView.querySelector('.alert--error');
+            if (existing) existing.remove();
+            const alert = document.createElement('div');
+            alert.className = 'alert alert--error';
+            alert.textContent = e.payload.error || 'Tu solicitud no fue aprobada.';
+            loginView.insertBefore(alert, loginView.firstChild);
+          }
+          toast(e.payload.error || 'Rechazado', 'error');
+        } else {
+          toast(e.message || 'Error al iniciar sesión', 'error');
+        }
+        return;
+      }
+    } else {
+      // OTP flow unchanged
+      if (!state.loginChallengeToken) {
+        const res = await authApi.sendCode(identifier);
+        state.loginChallengeToken = res?.challengeToken || '';
+        state.loginEmail = identifier;
+        if (otpField) otpField.classList.remove('hidden');
+        if (otpInput) {
+          otpInput.required = true;
+          otpInput.focus();
+        }
+        if (submitBtn) submitBtn.innerHTML = 'Iniciar sesión <i data-lucide="arrow-right"></i>';
+        toast(res?.message || 'Código de acceso enviado a tu correo.');
+      } else {
+        const code = otpInput?.value.trim();
+        if (!code) {
+          toast('Ingresa el código de 6 dígitos enviado a tu correo.', 'error');
+          if (submitBtn) setLoading(submitBtn, false);
+          return;
+        }
+        const res = await authApi.verifyCode(code, state.loginChallengeToken);
+        if (res?.verified) {
+          if (res.pendingApproval) {
+            toast('Tus datos están en validación. Tu cuenta aún no ha sido aprobada por un administrador.', 'error');
+            return;
+          }
+          if (res.accessToken) {
+            state.token = res.accessToken;
+          }
+          const found = state.requests.find(r => r.email === identifier || (r.datos && r.datos.email === identifier));
+          state.user = res.user || {
+            nombre: found?.nombre || found?.datos?.nombres || identifier.split('@')[0],
+            email: identifier,
+            rol: found?.tipo || 'COMPRADOR',
+            folio: found?.folio || 'CMP-0001',
+            estatus: found?.estatus || 'ACTIVO'
+          };
+          try {
+            if (typeof localStorage !== 'undefined') {
+              if (res.accessToken) localStorage.setItem('subasta_token', res.accessToken);
+              localStorage.setItem('subasta_user', JSON.stringify(state.user));
+            }
+          } catch (ignored) {}
+          toast(`¡Bienvenido de vuelta, ${state.user.nombre}!`);
+          updateUserAvatar();
+          state.loginChallengeToken = '';
+          state.loginEmail = '';
+          if (otpField) otpField.classList.add('hidden');
+          if (otpInput) otpInput.value = '';
+          if (emailInput) emailInput.value = '';
+          if (submitBtn) submitBtn.innerHTML = 'Enviar código de acceso <i data-lucide="arrow-right"></i>';
+        } else {
+          toast(res?.error || 'Código incorrecto.', 'error');
+        }
+      }
+    }
+  } catch (error) {
+    toast(error.message, 'error');
+  } finally {
+    if (submitBtn) setLoading(submitBtn, false);
+  }
+}
+
+  if (event) event.preventDefault();
+  const emailInput = $('#loginEmail');
+  const passwordInput = $('#loginPassword');
+  const otpInput = $('#loginOtpCode');
+  const otpField = $('#loginOtpField');
+  const submitBtn = $('#loginSubmitBtn');
+  const identifier = emailInput?.value.trim() || '';
+  const password = passwordInput?.value || '';
+
+  if (!identifier) {
+    toast('Por favor ingresa tu correo electrónico o teléfono.', 'error');
+    return;
+  }
+
+  if (submitBtn) setLoading(submitBtn, true);
+
+  try {
+    if (password) {
       const res = await authApi.login(identifier, password);
       if (res?.success && res?.accessToken) {
         state.token = res.accessToken;
@@ -1388,6 +1519,101 @@ export function updateEmailBadge() {
 }
 
 export async function submitOnboarding(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+
+  // Validate file inputs before collection
+  const fileInputs = Array.from(form.querySelectorAll('input[type="file"]'));
+  const allowedMime = ['application/pdf', 'image/jpeg', 'image/png'];
+  const allowedExt = /\.(pdf|jpe?g|png)$/i;
+  let hasError = false;
+  fileInputs.forEach(input => {
+    const file = input.files?.[0];
+    // Remove previous error if any
+    const prev = input.parentNode.querySelector('.error-msg');
+    if (prev) prev.remove();
+    if (file) {
+      const validMime = allowedMime.includes(file.type);
+      const validExt = allowedExt.test(file.name);
+      if (!validMime || !validExt) {
+        const err = document.createElement('span');
+        err.className = 'error-msg';
+        err.textContent = 'Tipo de archivo no permitido. Solo PDF, JPG y PNG.';
+        input.parentNode.appendChild(err);
+        hasError = true;
+      }
+    }
+  });
+  if (hasError) return;
+
+  const { data, files } = collectForm(form);
+  const email = (data.email || '').trim().toLowerCase();
+
+  if (data.fechaNacimiento && !isValidDateInput(data.fechaNacimiento)) {
+    toast('Fecha de nacimiento inválida. Usa el formato día/mes/año (ej. 15/05/1990).', 'error');
+    form.querySelector('[name="fechaNacimiento"]').focus();
+    return;
+  }
+  if (data.fechaConstitucion && !isValidDateInput(data.fechaConstitucion)) {
+    toast('Fecha de constitución inválida. Usa el formato día/mes/año (ej. 15/05/1990).', 'error');
+    form.querySelector('[name="fechaConstitucion"]').focus();
+    return;
+  }
+
+  const password = data.password || '';
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?\u0026#^()_+=\\-[\\]{}|;:,.\u003c\u003e])[A-Za-z\\d@$!%*?\u0026#^()_+=\\-[\\]{}|;:,.\u003c\u003e]{8,}$/;
+  if (password && !passwordRegex.test(password)) {
+    toast('La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y carácter especial.', 'error');
+    const pwdInput = form?.querySelector('[name="password"]');
+    if (pwdInput) pwdInput.focus();
+    return;
+  }
+
+  const submitBtn = form.querySelector('[type="submit"]');
+  if (submitBtn) setLoading(submitBtn, true, 'Guardando registro...');
+  try {
+    let result;
+    try {
+      result = state.role === 'COMPRADOR'
+        ? await onboardingApi.registerBuyer(data, files)
+        : await onboardingApi.registerSeller(data, files);
+    } catch (e) {
+      // Handle phone duplicate conflict from backend
+      if (e instanceof ApiError && e.status === 409) {
+        const phoneInput = form.querySelector('[name="telefono"]');
+        if (phoneInput) {
+          // Remove previous error
+          const prev = phoneInput.parentNode.querySelector('.error-msg');
+          if (prev) prev.remove();
+          const err = document.createElement('span');
+          err.className = 'error-msg';
+          err.textContent = e.payload?.error || 'El número de teléfono ya está registrado con otro correo.';
+          phoneInput.parentNode.appendChild(err);
+        }
+        toast(e.payload?.error || 'Teléfono duplicado.', 'error');
+        return;
+      }
+      throw e;
+    }
+
+    toast(`${result?.mensaje || 'Usuario registrado exitosamente en el backend'}${result?.folio ? ` · Folio ${result.folio}` : ''}`);
+    const successCard = $('#registrationSuccessMessage');
+    if (successCard) successCard.classList.remove('hidden');
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo(0, 0);
+    }
+    form.reset();
+    state.verifiedEmail = '';
+    state.verifiedEmailToken = '';
+    state.pendingRegistration = null;
+    updateEmailBadge();
+    setRole('COMPRADOR');
+  } finally {
+    if (submitBtn) setLoading(submitBtn, false);
+  }
+}
+
   event.preventDefault();
   const form = event.currentTarget;
   if (!form.reportValidity()) return;

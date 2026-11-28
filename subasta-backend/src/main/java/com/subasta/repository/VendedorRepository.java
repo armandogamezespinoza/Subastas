@@ -12,5 +12,6 @@ public interface VendedorRepository extends JpaRepository<Vendedor, Long> {
     Optional<Vendedor> findByFolio(String folio);
     boolean existsByCurp(String curp);
     boolean existsByRfc(String rfc);
+    boolean existsByTelefono(String telefono);
     long count();
 }

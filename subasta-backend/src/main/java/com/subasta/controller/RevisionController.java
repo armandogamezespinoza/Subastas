@@ -7,6 +7,7 @@ import com.subasta.repository.CompradorRepository;
 import com.subasta.repository.DocumentoRepository;
 import com.subasta.repository.VendedorRepository;
 import com.subasta.service.EmailService;
+import com.subasta.service.EmailTemplateService;
 import com.subasta.service.FileStorageService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
@@ -37,19 +38,22 @@ public class RevisionController {
     private final FileStorageService fileStorageService;
     private final com.subasta.repository.UsuarioRepository usuarioRepository;
     private final EmailService emailService;
+    private final EmailTemplateService emailTemplateService;
 
     public RevisionController(CompradorRepository compradorRepository,
                               VendedorRepository vendedorRepository,
                               DocumentoRepository documentoRepository,
                               FileStorageService fileStorageService,
                               com.subasta.repository.UsuarioRepository usuarioRepository,
-                              EmailService emailService) {
+                              EmailService emailService,
+                              EmailTemplateService emailTemplateService) {
         this.compradorRepository = compradorRepository;
         this.vendedorRepository = vendedorRepository;
         this.documentoRepository = documentoRepository;
         this.fileStorageService = fileStorageService;
         this.usuarioRepository = usuarioRepository;
         this.emailService = emailService;
+        this.emailTemplateService = emailTemplateService;
     }
 
     @GetMapping("/kpis")
@@ -226,11 +230,44 @@ public class RevisionController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/plantillas")
+    public ResponseEntity<?> getEmailTemplates() {
+        return ResponseEntity.ok(Map.of(
+                "plantillas", emailTemplateService.getAllTemplates(),
+                "parametrosEntorno", emailTemplateService.getEnvironmentDefaults()
+        ));
+    }
+
+    @PostMapping("/plantillas/render")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<?> renderEmailTemplate(@RequestBody Map<String, Object> body) {
+        String codigo = body.get("codigo") != null ? String.valueOf(body.get("codigo")) : null;
+        Map<String, String> params = extractParams(body.get("parametros"));
+        return ResponseEntity.ok(emailTemplateService.renderTemplate(codigo, params));
+    }
+
+    @PostMapping("/plantillas/enviar")
+    public ResponseEntity<?> sendEmailFromTemplate(@RequestBody Map<String, Object> body) {
+        String toEmail = body.get("toEmail") != null ? String.valueOf(body.get("toEmail")).trim() : null;
+        String codigo = body.get("codigo") != null ? String.valueOf(body.get("codigo")).trim() : null;
+        String customSubject = body.get("asunto") != null ? String.valueOf(body.get("asunto")) : null;
+        String customBody = body.get("mensaje") != null ? String.valueOf(body.get("mensaje")) : null;
+
+        if (toEmail == null || toEmail.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El correo destinatario es obligatorio"));
+        }
+
+        Map<String, String> params = extractParams(body.get("parametros"));
+        emailTemplateService.sendTemplatedEmail(toEmail, codigo, params, customSubject, customBody);
+        return ResponseEntity.ok(Map.of("success", true, "mensaje", "Correo enviado correctamente"));
+    }
+
     @PutMapping("/solicitudes/{tipo}/{id}/estatus")
     public ResponseEntity<?> updateEstatus(@PathVariable("tipo") String tipo,
                                           @PathVariable("id") Long id,
-                                          @RequestBody Map<String, String> body) {
-        String rawEstatus = body.get("estatus");
+                                          @RequestBody Map<String, Object> body) {
+        Object rawEstatusObj = body.get("estatus");
+        String rawEstatus = rawEstatusObj != null ? String.valueOf(rawEstatusObj) : null;
         if (rawEstatus == null || rawEstatus.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El campo estatus es obligatorio"));
         }
@@ -244,6 +281,7 @@ public class RevisionController {
             }
             Comprador c = compradorOpt.get();
             c.setEstatus(nuevoEstatus);
+            c.setFechaActualizacion(java.time.LocalDateTime.now());
             compradorRepository.save(c);
 
             syncUsuarioStatus(c.getUsuarioId(), nuevoEstatus);
@@ -258,6 +296,7 @@ public class RevisionController {
             }
             Vendedor v = vendedorOpt.get();
             v.setEstatus(nuevoEstatus);
+            v.setFechaActualizacion(java.time.LocalDateTime.now());
             vendedorRepository.save(v);
 
             syncUsuarioStatus(v.getUsuarioId(), nuevoEstatus);
@@ -295,30 +334,46 @@ public class RevisionController {
         return "Usuario";
     }
 
-    private void dispatchStatusNotification(String email, String nombre, String folio, String nuevoEstatus, Map<String, String> body) {
+    private void dispatchStatusNotification(String email, String nombre, String folio, String nuevoEstatus, Map<String, Object> body) {
         if (email == null || email.isBlank()) {
             return;
         }
-        String customMessage = body.get("mensaje");
-        String customSubject = body.get("asunto");
+        String customMessage = body.get("mensaje") != null ? String.valueOf(body.get("mensaje")) : null;
+        String customSubject = body.get("asunto") != null ? String.valueOf(body.get("asunto")) : null;
+        String templateCode = body.get("templateCode") != null ? String.valueOf(body.get("templateCode")).trim() : null;
 
-        if ("APROBADO".equalsIgnoreCase(nuevoEstatus)) {
-            String subject = (customSubject != null && !customSubject.isBlank())
-                    ? customSubject
-                    : "Solicitud aprobada — SUBASTA";
-            String message = (customMessage != null && !customMessage.isBlank())
-                    ? customMessage
-                    : "Felicidades, " + nombre + ".\n\n"
-                      + "Tu petición con folio " + folio + " ha sido aprobada por el administrador de la plataforma.\n"
-                      + "Ya puedes iniciar sesión con tu cuenta.\n\n"
-                      + "Te esperamos.";
-            emailService.sendCustomEmail(email, subject, message);
+        Map<String, String> params = new HashMap<>(extractParams(body.get("parametros")));
+        params.putIfAbsent("nombreCliente", nombre);
+        params.putIfAbsent("folio", folio != null ? folio : "");
+
+        if (templateCode == null || templateCode.isBlank()) {
+            if ("APROBADO".equalsIgnoreCase(nuevoEstatus)) {
+                templateCode = EmailTemplateService.TEMPLATE_APROBACION;
+            } else if ("RECHAZADO".equalsIgnoreCase(nuevoEstatus) || "NEGADO".equalsIgnoreCase(nuevoEstatus)) {
+                templateCode = EmailTemplateService.TEMPLATE_RECHAZO_DIRECTO;
+            }
+        }
+
+        if (templateCode != null && !templateCode.isBlank()) {
+            emailTemplateService.sendTemplatedEmail(email, templateCode, params, customSubject, customMessage);
         } else if (customMessage != null && !customMessage.isBlank()) {
             String subject = (customSubject != null && !customSubject.isBlank())
                     ? customSubject
                     : "Actualización de tu solicitud — SUBASTA";
             emailService.sendCustomEmail(email, subject, customMessage);
         }
+    }
+
+    private Map<String, String> extractParams(Object rawParams) {
+        Map<String, String> params = new HashMap<>();
+        if (rawParams instanceof Map<?, ?> map) {
+            map.forEach((k, v) -> {
+                if (k != null && v != null) {
+                    params.put(String.valueOf(k), String.valueOf(v));
+                }
+            });
+        }
+        return params;
     }
 
     /**

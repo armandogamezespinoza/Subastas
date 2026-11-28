@@ -390,10 +390,10 @@ class QaBackendFixesTests {
         assertThat(emailService.getSentCustomEmails()).hasSize(2);
         SentEmail approvalMail = emailService.getSentCustomEmails().get(1);
         assertThat(approvalMail.to()).isEqualTo(email);
-        assertThat(approvalMail.body()).contains("Felicidades, Carlos");
-        assertThat(approvalMail.body()).contains("Tu petición con folio " + folio + " ha sido aprobada por el administrador de la plataforma.");
-        assertThat(approvalMail.body()).contains("Ya puedes iniciar sesión con tu cuenta.");
-        assertThat(approvalMail.body()).contains("Te esperamos.");
+        assertThat(approvalMail.body()).contains("Hemos revisado tu documentación y es correcta.");
+        assertThat(approvalMail.body()).contains("$5000 mxn");
+        assertThat(approvalMail.body()).contains("012345678901234567");
+        assertThat(approvalMail.body()).contains(folio);
 
         // 3. Cambiar a NEGADO -> desactiva usuario y bloquea login
         mockMvc.perform(put("/api/v1/revision/solicitudes/COMPRADOR/" + comp.getId() + "/estatus")

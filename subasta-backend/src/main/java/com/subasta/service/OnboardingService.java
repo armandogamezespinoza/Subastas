@@ -49,7 +49,7 @@ public class OnboardingService {
         this.jwtService = jwtService;
     }
 
-    private Usuario validateVerifiedEmailAndCreateUser(String rawEmail, String verifiedEmailToken, String rawPassword, String rol) {
+    private Usuario validateVerifiedEmailAndCreateUser(String rawEmail, String verifiedEmailToken, String rawPassword, String rawTelefono, String rol) {
         if (rawEmail == null || rawEmail.isBlank()) {
             throw new IllegalArgumentException("El correo electrónico es obligatorio.");
         }
@@ -76,6 +76,14 @@ public class OnboardingService {
             throw new DuplicateResourceException("Ya existe un usuario registrado con este correo electrónico.");
         }
 
+        String telefono = rawTelefono != null ? rawTelefono.trim() : null;
+        if (telefono != null && !telefono.isBlank() && (
+                usuarioRepository.existsByTelefono(telefono)
+                        || compradorRepository.existsByTelefono(telefono)
+                        || vendedorRepository.existsByTelefono(telefono))) {
+            throw new DuplicateResourceException("Ya existe un usuario registrado con este número de teléfono.");
+        }
+
         String effectivePassword = rawPassword != null && !rawPassword.isBlank()
                 ? rawPassword
                 : UUID.randomUUID().toString().substring(0, 8);
@@ -98,8 +106,9 @@ public class OnboardingService {
 
     @Transactional
     public String registerBuyer(BuyerRegistrationDto dto, Map<String, MultipartFile> files) {
-        Usuario nuevo = validateVerifiedEmailAndCreateUser(dto.getEmail(), dto.getVerifiedEmailToken(), dto.getPassword(), "COMPRADOR");
-        nuevo.setTelefono(dto.getTelefono());
+        String telefono = dto.getTelefono() != null ? dto.getTelefono().trim() : null;
+        Usuario nuevo = validateVerifiedEmailAndCreateUser(dto.getEmail(), dto.getVerifiedEmailToken(), dto.getPassword(), telefono, "COMPRADOR");
+        nuevo.setTelefono(telefono);
         Usuario user = usuarioRepository.save(nuevo);
 
         long count = compradorRepository.count() + 1;
@@ -130,6 +139,7 @@ public class OnboardingService {
         comprador.setEstado(dto.getEstado());
         comprador.setEstatus("ENVIADO");
         comprador.setFechaCreacion(LocalDateTime.now());
+        comprador.setFechaActualizacion(LocalDateTime.now());
 
 
         Comprador guardado = compradorRepository.save(comprador);
@@ -155,8 +165,9 @@ public class OnboardingService {
 
     @Transactional
     public String registerSeller(SellerRegistrationDto dto, Map<String, MultipartFile> files) {
-        Usuario nuevo = validateVerifiedEmailAndCreateUser(dto.getEmail(), dto.getVerifiedEmailToken(), dto.getPassword(), "VENDEDOR");
-        nuevo.setTelefono(dto.getTelefono());
+        String telefono = dto.getTelefono() != null ? dto.getTelefono().trim() : null;
+        Usuario nuevo = validateVerifiedEmailAndCreateUser(dto.getEmail(), dto.getVerifiedEmailToken(), dto.getPassword(), telefono, "VENDEDOR");
+        nuevo.setTelefono(telefono);
         Usuario user = usuarioRepository.save(nuevo);
 
         long count = vendedorRepository.count() + 1;
@@ -199,6 +210,7 @@ public class OnboardingService {
         vendedor.setDomicilioOperacion(dto.getDomicilioOperacion());
         vendedor.setEstatus("ENVIADO");
         vendedor.setFechaCreacion(LocalDateTime.now());
+        vendedor.setFechaActualizacion(LocalDateTime.now());
 
         Vendedor guardado = vendedorRepository.save(vendedor);
 

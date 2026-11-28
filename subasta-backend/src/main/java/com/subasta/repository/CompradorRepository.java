@@ -12,5 +12,6 @@ public interface CompradorRepository extends JpaRepository<Comprador, Long> {
     Optional<Comprador> findByFolio(String folio);
     boolean existsByCurp(String curp);
     boolean existsByRfc(String rfc);
+    boolean existsByTelefono(String telefono);
     long count();
 }
